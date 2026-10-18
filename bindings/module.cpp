@@ -1,4 +1,5 @@
 #include <fuse/smoke.h>
+#include <fuse/version.h>
 #include <fuse/reconstruct.h>
 #include <nanobind/stl/array.h>
 #include <nanobind/nanobind.h>
@@ -59,6 +60,17 @@ NB_MODULE(_native, m) {
         info["topology_bytes"] = storage->topology_bytes;
         timings["topology"] = storage->topology_ms;
         info["boundary_mode"] = "full";
+        info["validation"] = topology ? "full" : "basic";
+        info["max_memory_bytes"] = memory;
+        info["input_mesh_count"] = views.size();
+        std::uint64_t input_triangles=0;
+        for(const auto& mesh:views) input_triangles+=mesh.face_count;
+        info["input_triangle_count"] = input_triangles;
+        nb::dict topology_stages;
+        topology_stages["candidates"] = storage->topology_candidates_ms;
+        topology_stages["keys"] = storage->topology_keys_ms;
+        topology_stages["index"] = storage->topology_index_ms;
+        info["topology_stages_ms"] = topology_stages;
         timings["prepare"] = storage->prepare_ms;
         timings["upload"] = storage->upload_ms;
         timings["field"] = storage->field_ms;
@@ -89,7 +101,8 @@ NB_MODULE(_native, m) {
         info["cuda_version"] = fuse::cuda_build_version();
         info["cuda_architectures"] = fuse::cuda_architectures();
         info["cuda_runtime"] = "static";
-        info["milestone"] = 2;
+        info["milestone"] = 3;
+        info["version"] = fuse::version();
         return info;
     });
 }

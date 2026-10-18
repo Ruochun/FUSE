@@ -3,9 +3,33 @@
 #include <nanovdb/tools/CreateNanoGrid.h>
 #include <unordered_set>
 #include <cstring>
+#include <chrono>
 
 namespace fuse::detail {
 namespace {
+using Clock=std::chrono::steady_clock;
+double elapsed(Clock::time_point start) { return std::chrono::duration<double,std::milli>(Clock::now()-start).count(); }
+struct Interval { std::uint64_t begin,end; };
+// Sort/merge contiguous x-runs instead of sorting every cell/sample key.
+// Emitted keys retain exactly M2's global z/y/x ordering and shared halos.
+std::vector<std::uint64_t> expand(std::vector<Interval>& rows,std::uint64_t limit) {
+    std::sort(rows.begin(),rows.end(),[](const Interval& a,const Interval& b){return a.begin<b.begin;});
+    std::size_t count=0;
+    for(auto row:rows) {
+        if(count && row.begin<=rows[count-1].end+1) rows[count-1].end=std::max(rows[count-1].end,row.end);
+        else rows[count++]=row;
+    }
+    std::uint64_t size=0;
+    for(std::size_t i=0;i<count;++i) {
+        const auto n=rows[i].end-rows[i].begin+1;
+        if(n>limit-size) throw ResourceError("sparse active counts exceed scan limits or max_memory_bytes");
+        size+=n;
+    }
+    std::vector<std::uint64_t> keys;keys.reserve(size);
+    for(std::size_t i=0;i<count;++i)
+        for(auto k=rows[i].begin;k<=rows[i].end;++k) keys.push_back(k);
+    return keys;
+}
 struct Int3 { int v[3]; int& operator[](int a) { return v[a]; } int operator[](int a) const { return v[a]; } };
 // Conservative triangle/box SAT. Projection margins cover arithmetic roundoff
 // and the field's symbolic zero offset. Candidate discovery never uses signs.
@@ -34,6 +58,7 @@ bool overlaps(const Triangle& t, Int3 low, Int3 high) {
 }
 SparseTopology make_topology(const Scene& s,const ReconstructionOptions& options) {
     SparseTopology out;
+    auto start=Clock::now();
     const auto nx=s.dimensions[0],ny=s.dimensions[1];
     auto key=[&](int x,int y,int z) { return (std::uint64_t(z)*ny+y)*nx+x; };
     std::unordered_set<std::uint64_t> blocks;
@@ -64,19 +89,18 @@ SparseTopology make_topology(const Scene& s,const ReconstructionOptions& options
         visit(visit,t,lo,hi);
     }
     out.blocks=blocks.size();
+    out.candidates_ms=elapsed(start);start=Clock::now();
+    std::vector<Interval> cell_rows,sample_rows;
+    cell_rows.reserve(blocks.size()*64);sample_rows.reserve(blocks.size()*81);
     for(auto k:blocks) {
         int x=k%nx,y=k/nx%ny,z=k/(std::uint64_t(nx)*ny);
         int ex=std::min(x+8,int(nx)-1),ey=std::min(y+8,int(ny)-1),ez=std::min(z+8,int(s.dimensions[2])-1);
-        for(int c=z;c<ez;++c) for(int b=y;b<ey;++b) for(int a=x;a<ex;++a) out.cells.push_back(key(a,b,c));
-        for(int c=z;c<=ez;++c) for(int b=y;b<=ey;++b) for(int a=x;a<=ex;++a) out.samples.push_back(key(a,b,c));
+        for(int c=z;c<ez;++c) for(int b=y;b<ey;++b) cell_rows.push_back({key(x,b,c),key(ex-1,b,c)});
+        for(int c=z;c<=ez;++c) for(int b=y;b<=ey;++b) sample_rows.push_back({key(x,b,c),key(ex,b,c)});
     }
-    std::sort(out.cells.begin(),out.cells.end());
-    std::sort(out.samples.begin(),out.samples.end());
-    out.samples.erase(std::unique(out.samples.begin(),out.samples.end()),out.samples.end());
-    if(out.samples.size()>INT32_MAX/3 || out.cells.size()>INT32_MAX)
-        throw ResourceError("sparse active counts exceed scan indexing limits");
-    if(out.samples.size()>options.max_memory_bytes/40 || out.cells.size()>options.max_memory_bytes/24)
-        throw ResourceError("sparse samples exceed max_memory_bytes");
+    out.cells=expand(cell_rows,std::min<std::uint64_t>(INT32_MAX,options.max_memory_bytes/24));
+    out.samples=expand(sample_rows,std::min<std::uint64_t>(INT32_MAX/3,options.max_memory_bytes/40));
+    out.keys_ms=elapsed(start);start=Clock::now();
     using BuildGrid=nanovdb::tools::build::Grid<std::uint64_t>;
     BuildGrid grid(0);
     auto acc=grid.getAccessor();
@@ -88,6 +112,7 @@ SparseTopology make_topology(const Scene& s,const ReconstructionOptions& options
     if(handle.bufferSize()>options.max_memory_bytes) throw ResourceError("NanoVDB topology exceeds max_memory_bytes");
     out.grid.resize(handle.bufferSize());
     std::memcpy(out.grid.data(),handle.data(),out.grid.size());
+    out.index_ms=elapsed(start);
     return out;
 }
 }

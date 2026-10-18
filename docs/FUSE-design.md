@@ -12,7 +12,9 @@ M1 implementation choices and validation are recorded in
 [decision 0002](decisions/0002-m1-dense-baseline.md) and
 [M1 validation](m1-validation.md). M2 sparse implementation choices and evidence
 are in [decision 0003](decisions/0003-m2-sparse.md) and
-[M2 validation](m2-validation.md).
+[M2 validation](m2-validation.md). M3 choices and evidence are recorded in
+[decision 0004](decisions/0004-m3-performance-api.md),
+[M3 validation](m3-validation.md), and the [0.2 API contract](api.md).
 
 FUSE will reconstruct a surface mesh approximating the union of multiple potentially overlapping solids. The implementation will use C++ and CUDA, with NanoVDB as an internal dependency, and expose a Python API distributed as binary wheels on PyPI. This document records the agreed direction, proposed implementation defaults, correctness constraints, and development milestones for implementation agents.
 
@@ -389,6 +391,34 @@ Acceptance: representative workload benchmarks and regression thresholds are rec
 Add the required platform matrix, runtime dependency handling, clean-install GPU tests, source archive verification, documentation, and release rehearsal.
 
 Acceptance: users can install the supported wheel and run reconstruction without a compiler or CUDA toolkit.
+
+### Milestone 5 Surface mesh simplification
+
+After M4, add an optional post-reconstruction utility to reduce unnecessary
+triangles on planar and gently curved regions. Here, merging fine cells means
+simplifying the extracted surface mesh; the sampling grid remains uniform and
+adaptive voxel refinement remains deferred. Output remains a triangle mesh.
+
+Start by evaluating quadric edge-collapse decimation through the existing
+[Trimesh helper](https://trimesh.org/trimesh.html#trimesh.Trimesh.simplify_quadric_decimation)
+and its additional [fast-simplification dependency](https://github.com/pyvista/fast-simplification).
+For explicit planar patch merging and retriangulation, evaluate
+[CGAL planar patch simplification](https://doc.cgal.org/6.2/PMP_Remeshing/group__PMP__planar__remeshing__grp.html).
+Backend selection is pending compatibility, licensing, packaging, and quality
+evaluation; no dependency is selected or added by this milestone definition.
+
+Expose explicit simplification controls and report before/after counts and
+geometric error. Define world-space error tolerance, sharp-feature protection,
+and failure behavior before stabilizing the API. A target face count or quadric
+cost alone must not be presented as a guaranteed surface-distance bound.
+Keep the unsimplified reconstruction available and simplification opt-in.
+
+Acceptance: meaningful tests on planar boxes, curved surfaces, sharp creases,
+thin features, disconnected solids, and cavities demonstrate triangle reduction
+while checking geometric deviation, volume change, watertightness, manifoldness,
+winding, and preserved topology. Record time and memory overhead; document any
+limits of the selected backend and reject results that violate promised checks.
+Verify the added dependency against the M4 Python and wheel support matrix.
 
 ## 13 Decisions still required
 

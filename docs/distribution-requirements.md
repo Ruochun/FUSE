@@ -37,7 +37,11 @@ or tested. Architecture and reconstruction milestones are defined in
 See [M0 validation](m0-validation.md) for the actual environment, checks, and
 limits. M0 established diagnostics only. M1 now provides the dense reconstruction
 baseline; see [M1 validation](m1-validation.md). M2 adds default sparse NanoVDB
-reconstruction; see [M2 validation](m2-validation.md).
+reconstruction; see [M2 validation](m2-validation.md). M3 adds measured
+performance improvements, regression guardrails, and a documented 0.2 API;
+see [M3 validation](m3-validation.md). `VERSION` is authoritative for package
+and native versioning; the current release version is `0.2.0`. This version
+number does not imply public publication or completion of the release matrix.
 
 ## File-loading dependency
 
@@ -59,7 +63,7 @@ See [mesh loading](mesh-loading.md).
 | GPU CI execution | Provide GPU-capable runners, such as self-hosted runners, to install and exercise the built wheels. Compilation can run without a GPU; import-only checks are insufficient for release acceptance. | M4 |
 | Portable Linux wheels | Choose a manylinux baseline, build in an appropriate CUDA-equipped environment, inspect/repair dependencies, and validate clean installations. The current local wheel retains a `linux_x86_64` tag; its observed symbol floor is glibc 2.34. | M4 |
 | Platform support | Finalize OS/CPU architecture coverage. If Windows is included in the release matrix, add separate Windows builds, DLL dependency inspection/repair, and GPU tests. CUDA execution on macOS is outside the current backend scope. | M4 |
-| GPU and driver support | Finalize and document the architecture set, CUDA family, minimum driver, and PTX policy. Execute compatibility tests on representative supported hardware and drivers; only SM 89 has been executed through M2. | M3–M4 |
+| GPU and driver support | Finalize and document the architecture set, CUDA family, minimum driver, and PTX policy. Execute compatibility tests on representative supported hardware and drivers; only SM 89 has been executed through M3. | M3–M4 |
 | Toolkit-free reconstruction | Repeat clean-environment tests with actual reconstruction after M1/M2 and after any native dependency change. Verify both direct dependencies and libraries loaded at runtime. M1 dense and M2 sparse reconstruction pass toolkit-hidden tests on the initial platform; expand this evidence across the release matrix. | M1–M4 |
 | Failure diagnostics | Extend tests for missing/incompatible drivers, unsupported devices, and resource failures as the reconstruction backend develops. M0 covers invalid devices and no-visible-GPU errors, but not an actual missing-driver host. | M1–M4 |
 | Reproducible source releases | Continue verifying that source archives contain pinned native sources and build independently of the checkout. Source builds may require a compiler and CUDA toolkit; the toolkit-free promise applies to supported binary wheels. | M4 |

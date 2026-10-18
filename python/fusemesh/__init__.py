@@ -1,4 +1,4 @@
-"""Fast Union Surface Extraction: sparse CUDA reconstruction (M2)."""
+"""Fast Union Surface Extraction: sparse CUDA reconstruction (M3)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,7 +11,7 @@ from .io import load_mesh, load_meshes, save_mesh, _is_source
 
 from ._native import ResourceError, _reconstruct, build_info, smoke_test
 
-__version__ = "0.0.1.dev2"
+__version__ = build_info()["version"]
 __all__ = ["reconstruct", "ReconstructionResult", "ResourceError", "build_info", "smoke_test",
            "load_mesh", "load_meshes", "save_mesh"]
 
@@ -55,6 +55,10 @@ def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
     calls use bounded GPU chunks to fill it. Omit it for very large domains.
     Calls are synchronous. Empty input returns empty arrays without using CUDA.
     """
+    if isinstance(voxel_size, (bool, np.bool_)):
+        raise TypeError("voxel_size must be a real number, not bool")
+    if not isinstance(return_field, (bool, np.bool_)):
+        raise TypeError("return_field must be a boolean")
     if backend not in ("sparse", "dense"):
         raise ValueError("backend must be 'sparse' or 'dense'")
     if validation not in ("full", "basic"):
@@ -62,11 +66,13 @@ def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
     if isinstance(device, (bool, np.bool_)):
         raise TypeError("device must be an integer")
     device = operator.index(device)
+    if device < 0 or device > 2**31-1:
+        raise ValueError("device must be a nonnegative signed 32-bit integer")
     if isinstance(max_memory_bytes, (bool, np.bool_)):
         raise TypeError("max_memory_bytes must be an integer")
     max_memory_bytes = operator.index(max_memory_bytes)
-    if max_memory_bytes <= 0:
-        raise ValueError("max_memory_bytes must be positive")
+    if not 0 < max_memory_bytes <= 2**64-1:
+        raise ValueError("max_memory_bytes must be positive and fit uint64")
     if _is_source(meshes):
         meshes = [meshes]
     def expanded_inputs():

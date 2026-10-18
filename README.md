@@ -1,9 +1,10 @@
 # FUSE — Fast Union Surface Extraction
 
 C++/CUDA reconstruction of the full boundary of a union of closed triangle
-meshes, with a NumPy-facing Python API. **M2 is implemented:** sparse NanoVDB
-candidate topology with CUDA field evaluation and indexed extraction. The M1
-dense backend remains available for comparison; public PyPI wheels are upcoming.
+meshes, with a NumPy-facing Python API. **M3 is implemented:** sparse NanoVDB
+reconstruction with optimized topology construction and BVH queries, documented
+API behavior, and repeatable performance checks. The dense backend remains a
+correctness reference; public PyPI wheels are upcoming.
 
 ## Reconstruct a union
 
@@ -51,7 +52,7 @@ and enclosed cavity walls are preserved when resolved by the grid. There is no
 repair, smoothing, or automatic deletion of small components. Subvoxel walls,
 gaps, and components may disappear; voxel spacing is not an error guarantee.
 Degenerate contacts and unresolved cell-interior topology are not guaranteed
-manifold. See the [M1 numerical and extraction policy](docs/decisions/0002-m1-dense-baseline.md).
+manifold. See the [API contract](docs/api.md) and [M1 numerical and extraction policy](docs/decisions/0002-m1-dense-baseline.md).
 
 The memory limit covers FUSE device buffers, including scratch and output, but
 not CUDA context memory or host arrays. Sparse candidate topology is currently
@@ -83,13 +84,16 @@ SM 89 has been executed. Other platforms/drivers are not yet validated.
 git submodule update --init --recursive
 python -m pip install build
 python -m build
-python -m pip install --upgrade dist/fusemesh-0.0.1.dev2-*.whl
+python -m pip install --upgrade dist/fusemesh-0.2.0-*.whl
 python -c 'import fusemesh; print(fusemesh.build_info()); print(fusemesh.smoke_test())'
 ```
 
 When rebuilding without changing the version, use `--force-reinstall --no-deps`
 instead of `--upgrade`; pip does not compare wheel contents. Restart any Python
 process that has already loaded the extension.
+
+The root [`VERSION`](VERSION) file is the only release-version source. Change
+it, rebuild, and reinstall to bump the wheel, Python, and native versions together.
 
 A runnable OBJ demo is available with `python examples/union_demo.py`.
 For your own files:
@@ -126,7 +130,7 @@ The tests compare GPU fields with analytic solids and an independent NumPy
 solid-angle/distance reference. They check closure, winding, components, Euler
 characteristics, volume, surface error, resource limits, and sampling losses.
 Native tests exercise all cube sign cases and shared-face extraction. See
-[M2 validation](docs/m2-validation.md), [M1 validation](docs/m1-validation.md), and [M0 validation](docs/m0-validation.md).
+[M3 validation](docs/m3-validation.md), [M2 validation](docs/m2-validation.md), [M1 validation](docs/m1-validation.md), and [M0 validation](docs/m0-validation.md).
 
 See [the design](docs/FUSE-design.md),
 [distribution requirements](docs/distribution-requirements.md),

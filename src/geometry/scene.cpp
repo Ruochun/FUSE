@@ -76,6 +76,28 @@ std::uint32_t build(Scene& s, std::uint32_t begin, std::uint32_t end) {
     s.nodes[id].escape=static_cast<std::uint32_t>(s.nodes.size());
     return id;
 }
+std::uint32_t build_shapes(Scene& s,std::uint32_t begin,std::uint32_t end) {
+    const auto id=static_cast<std::uint32_t>(s.shape_nodes.size());
+    s.shape_nodes.emplace_back();
+    Box bounds;
+    for(auto i=begin;i<end;++i) bounds.add(s.shapes[i].bounds);
+    s.shape_nodes[id].bounds=bounds;
+    if(end-begin<=4) {
+        s.shape_nodes[id].begin=begin;s.shape_nodes[id].count=end-begin;
+    } else {
+        const auto extent=bounds.hi-bounds.lo;
+        int axis=extent.y>extent.x ? 1:0;
+        if(extent.z>extent[axis]) axis=2;
+        const auto mid=begin+(end-begin)/2;
+        std::nth_element(s.shapes.begin()+begin,s.shapes.begin()+mid,s.shapes.begin()+end,
+            [axis](const Shape& a,const Shape& b) {
+                return a.bounds.lo[axis]+a.bounds.hi[axis] < b.bounds.lo[axis]+b.bounds.hi[axis];
+            });
+        build_shapes(s,begin,mid);build_shapes(s,mid,end);
+    }
+    s.shape_nodes[id].escape=static_cast<std::uint32_t>(s.shape_nodes.size());
+    return id;
+}
 } // namespace
 Scene prepare(const std::vector<MeshView>& meshes, const ReconstructionOptions& options) {
     Scene s;
@@ -149,6 +171,7 @@ Scene prepare(const std::vector<MeshView>& meshes, const ReconstructionOptions& 
         auto root=build(s,begin,static_cast<std::uint32_t>(s.triangles.size()));
         s.shapes.push_back({s.nodes[root].bounds,root,s.nodes[root].escape});
     }
+    if(s.shapes.size()>4) build_shapes(s,0,static_cast<std::uint32_t>(s.shapes.size()));
     return s;
 }
 } // namespace fuse::detail

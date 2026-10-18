@@ -49,6 +49,7 @@ struct Scene {
     std::vector<Triangle> triangles;
     std::vector<Node> nodes;
     std::vector<Shape> shapes;
+    std::vector<Node> shape_nodes; // optional top-level BVH; leaves index shapes
     std::array<double,3> origin{};
     std::array<std::uint32_t,3> dimensions{};
 };

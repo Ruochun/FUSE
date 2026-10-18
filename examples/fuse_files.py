@@ -19,7 +19,7 @@ def main():
     parser.add_argument('--validation', choices=('full','basic'), default='full',
                         help='full checks manifold topology; basic skips topology checks without repairing the mesh')
     parser.add_argument('--device', type=int, default=0)
-    parser.add_argument('--memory-mib', type=int, default=512)
+    parser.add_argument('--memory-mib', type=int, default=16*1024)
     args = parser.parse_args()
     start = time.perf_counter()
     meshes = fusemesh.load_meshes(args.inputs)
@@ -32,7 +32,7 @@ def main():
     fusemesh.save_mesh(args.output,result)
     print(json.dumps(dict(input_meshes=len(meshes),input_triangles=sum(len(f) for _,f in meshes),
                          loading_ms=loading_ms,reconstruction_ms=reconstruction_ms,
-                         output=str(args.output.resolve()),validation=args.validation,**result.metadata),indent=2))
+                         output=str(args.output.resolve()),**result.metadata),indent=2))
 
 
 if __name__ == '__main__':

@@ -34,7 +34,9 @@ struct Buffer {
     Budget& budget;
     std::uint64_t size=0;
     Buffer(Budget& b,std::uint64_t bytes):budget(b) {
-        if(bytes>budget.limit-budget.live) throw ResourceError("reconstruction exceeds max_memory_bytes; increase voxel_size or the memory budget");
+        if(bytes>budget.limit-budget.live) throw ResourceError("reconstruction exceeds max_memory_bytes: requested "+std::to_string(bytes)+
+            " bytes with "+std::to_string(budget.live)+" live and limit "+std::to_string(budget.limit)+
+            "; increase voxel_size or the memory budget");
         if(bytes) check(cudaMalloc(&data,bytes),"allocate reconstruction buffer");
         size=bytes;budget.live+=bytes;budget.peak=std::max(budget.peak,budget.live);
     }
@@ -55,6 +57,7 @@ struct Grid {
     __device__ std::uint64_t index(int x,int y,int z) const { return (std::uint64_t(z)*ny+y)*nx+x; }
     __device__ Vec point(std::uint64_t i) const { return {double(i%nx),double(i/nx%ny),double(i/(std::uint64_t(nx)*ny))}; }
     __device__ Vec cell_point(std::uint64_t i) const { return {double(i%(nx-1)),double(i/(nx-1)%(ny-1)),double(i/(std::uint64_t(nx-1)*(ny-1)))}; }
+    __device__ Grid getAccessor() const { return *this; }
 };
 struct SparseGrid : Grid {
     const nanovdb::NanoGrid<std::uint64_t>* topology = nullptr;
@@ -66,24 +69,54 @@ struct SparseGrid : Grid {
     __device__ std::uint64_t index(int x,int y,int z) const {
         return topology->tree().getValue(nanovdb::Coord(x,y,z))-1;
     }
+    struct Accessor {
+        nanovdb::DefaultReadAccessor<std::uint64_t> values;
+        __device__ std::uint64_t index(int x,int y,int z) { return values.getValue(nanovdb::Coord(x,y,z))-1; }
+    };
+    __device__ Accessor getAccessor() const { return {topology->getAccessor()}; }
     __device__ Vec point(std::uint64_t i) const { return Grid::point(sample_keys[i]); }
     __device__ Vec cell_point(std::uint64_t i) const { return Grid::point(cell_keys[i]); }
 };
 __device__ std::uint64_t thread_index() { return std::uint64_t(blockIdx.x)*blockDim.x+threadIdx.x; }
-template<class G> __global__ void evaluate(G grid,const Triangle* tris,const Node* nodes,const Shape* shapes,std::uint32_t shape_count,double* field, std::uint64_t offset=0, std::uint64_t count=UINT64_MAX) {
+__device__ void evaluate_shape(Vec p,const Shape& shape,const Node* nodes,const Triangle* tris,double& value) {
+    double lower=shape.bounds.distance2(p);
+    if(!shape.bounds.contains(p) && (value<0 || lower>value*value)) return;
+    value=minval(value,signed_distance(p,shape,nodes,tris));
+}
+template<class G,bool Hierarchy> __global__ void evaluate(G grid,const Triangle* tris,const Node* nodes,const Shape* shapes,std::uint32_t shape_count,const Node* shape_nodes,std::uint32_t shape_node_count,double* field, std::uint64_t offset=0, std::uint64_t count=UINT64_MAX) {
     auto local=thread_index();auto i=local+offset;if(local>=count || i>=grid.samples()) return;
     Vec p=grid.point(i);double value=INFINITY;
-    for(std::uint32_t s=0;s<shape_count;++s) {
-        const Shape& shape=shapes[s];
-        double lower=shape.bounds.distance2(p);
-        if(!shape.bounds.contains(p) && (value<0 || lower>value*value)) continue;
-        value=minval(value,signed_distance(p,shape,nodes,tris));
+    if constexpr(Hierarchy) {
+        // As with the triangle BVH, median splitting bounds the depth below 32.
+        // Visit nearby shape bounds first to establish a useful pruning value.
+        std::uint32_t pending[32],node=0;int count=0;
+        while(true) {
+            const auto& n=shape_nodes[node];
+            const double lower=n.bounds.distance2(p);
+            // A possible containing solid must always contribute, regardless of
+            // distance to its surface or the sign of an already evaluated shape.
+            if(n.bounds.contains(p) || !(value<0 || lower>value*value)) {
+                if(n.count) {
+                    for(std::uint32_t j=0;j<n.count;++j) evaluate_shape(p,shapes[n.begin+j],nodes,tris,value);
+                } else {
+                    auto near=node+1,far=shape_nodes[near].escape;
+                    if(shape_nodes[far].bounds.distance2(p)<shape_nodes[near].bounds.distance2(p)) {
+                        auto swap=near;near=far;far=swap;
+                    }
+                    pending[count++]=far;node=near;continue;
+                }
+            }
+            if(!count) break;
+            node=pending[--count];
+        }
+    } else {
+        for(std::uint32_t s=0;s<shape_count;++s) evaluate_shape(p,shapes[s],nodes,tris,value);
     }
     // Exact/near-zero samples are exterior with a tiny positive symbolic offset.
     // Samples within the numerical zero threshold use the exterior convention.
     field[local]=fabs(value)<=1e-12 ? 1e-7:value;
 }
-template<class G> __device__ Cell cell_at(G g,const double* field,Vec p) {
+template<class G> __device__ Cell cell_at(G& g,const double* field,Vec p) {
     Cell c{};
     for(int i=0;i<8;++i) { Vec q=p+Cell::corner(i); c.values[i]=field[g.index(int(q.x),int(q.y),int(q.z))]; }
     c.build();return c;
@@ -97,7 +130,8 @@ template<class G> __global__ void edge_counts(G g,const double* field,std::uint6
 }
 template<class G> __global__ void cell_counts(G g,const double* field,std::uint64_t* centers,std::uint64_t* faces) {
     auto i=thread_index();if(i>=g.cells()) return;
-    Cell c=cell_at(g,field,g.cell_point(i));unsigned seen=0;int edges[12];
+    auto accessor=g.getAccessor();
+    Cell c=cell_at(accessor,field,g.cell_point(i));unsigned seen=0;int edges[12];
     std::uint64_t loops=0,triangles=0;
     for(int e=0;e<12;++e) if(c.degree[e] && !(seen&(1u<<e))) { triangles+=c.loop(e,edges,seen);++loops; }
     centers[i]=loops;faces[i]=triangles;
@@ -112,7 +146,7 @@ template<class G> __global__ void emit_edges(G g,const double* field,const std::
     if(axis==0) p.x+=t;else if(axis==1) p.y+=t;else p.z+=t;
     vertices[count-1]=p;
 }
-template<class G> __device__ std::uint64_t edge_id(G g,Vec cell,int e,const std::uint64_t* edges) {
+template<class G> __device__ std::uint64_t edge_id(G& g,Vec cell,int e,const std::uint64_t* edges) {
     int a,b;Cell::endpoints(e,a,b);Vec p=Cell::corner(a),q=Cell::corner(b);
     int axis=p.x!=q.x ? 0:p.y!=q.y ? 1:2;
     Vec lo{minval(p.x,q.x)+cell.x,minval(p.y,q.y)+cell.y,minval(p.z,q.z)+cell.z};
@@ -123,7 +157,8 @@ template<class G> __global__ void emit_cells(G g,const double* field,const std::
                            const std::uint64_t* center_prefix,const std::uint64_t* face_prefix,
                            std::uint64_t edge_count,Vec* vertices,std::uint64_t* faces) {
     auto i=thread_index();if(i>=g.cells()) return;
-    Vec p=g.cell_point(i);Cell c=cell_at(g,field,p);unsigned seen=0;
+    auto accessor=g.getAccessor();
+    Vec p=g.cell_point(i);Cell c=cell_at(accessor,field,p);unsigned seen=0;
     auto center=edge_count+(i?center_prefix[i-1]:0),face=i?face_prefix[i-1]:0;
     for(int e=0;e<12;++e) if(c.degree[e] && !(seen&(1u<<e))) {
         Vec mean{0,0,0};int n=0,previous=-1,current=e;
@@ -137,7 +172,7 @@ template<class G> __global__ void emit_cells(G g,const double* field,const std::
         previous=-1;current=e;
         do {
             int next=c.adjacent[current][0]==previous ? c.adjacent[current][1]:c.adjacent[current][0];
-            auto a=edge_id(g,p,current,edge_prefix),b=edge_id(g,p,next,edge_prefix);
+            auto a=edge_id(accessor,p,current,edge_prefix),b=edge_id(accessor,p,next,edge_prefix);
             faces[3*face]=reverse?b:a;faces[3*face+1]=reverse?a:b;faces[3*face+2]=center;++face;
             previous=current;current=next;
         } while(current!=e);
@@ -145,6 +180,16 @@ template<class G> __global__ void emit_cells(G g,const double* field,const std::
     }
 }
 unsigned blocks(std::uint64_t n) { return static_cast<unsigned>((n+255)/256); }
+template<class G> void launch_evaluate(G grid,const Triangle* tris,const Node* nodes,const Shape* shapes,
+    std::uint32_t shape_count,const Node* shape_nodes,std::uint32_t shape_node_count,double* field,
+    cudaStream_t stream,std::uint64_t offset=0,std::uint64_t count=UINT64_MAX) {
+    const auto n=std::min(count,grid.samples()-offset);
+    // Separate kernels avoid imposing hierarchy traversal state on small scenes.
+    if(shape_node_count)
+        evaluate<G,true><<<blocks(n),256,0,stream>>>(grid,tris,nodes,shapes,shape_count,shape_nodes,shape_node_count,field,offset,count);
+    else
+        evaluate<G,false><<<blocks(n),256,0,stream>>>(grid,tris,nodes,shapes,shape_count,shape_nodes,shape_node_count,field,offset,count);
+}
 void launch_check() { check(cudaGetLastError(),"launch reconstruction kernel"); }
 } // namespace
 template<class G> ReconstructionResult run_grid(const Scene& scene,const ReconstructionOptions& options,
@@ -156,7 +201,7 @@ template<class G> ReconstructionResult run_grid(const Scene& scene,const Reconst
     if(topology) { out.candidate_blocks=topology->blocks;out.topology_bytes=topology->grid.size(); }
     auto start=Clock::now();
     Buffer tris(budget,scene.triangles.size()*sizeof(Triangle)),nodes(budget,scene.nodes.size()*sizeof(Node)),
-           shapes(budget,scene.shapes.size()*sizeof(Shape)),field(budget,grid.samples()*sizeof(double));
+           shapes(budget,scene.shapes.size()*sizeof(Shape)),shape_nodes(budget,scene.shape_nodes.size()*sizeof(Node)),field(budget,grid.samples()*sizeof(double));
     Buffer nano(budget,topology?topology->grid.size():0),
            sample_keys(budget,topology?topology->samples.size()*8:0),
            cell_keys(budget,topology?topology->cells.size()*8:0);
@@ -172,6 +217,7 @@ template<class G> ReconstructionResult run_grid(const Scene& scene,const Reconst
     check(cudaMemcpyAsync(tris.data,scene.triangles.data(),tris.size,cudaMemcpyHostToDevice,stream.value),"upload triangles");
     check(cudaMemcpyAsync(nodes.data,scene.nodes.data(),nodes.size,cudaMemcpyHostToDevice,stream.value),"upload BVH");
     check(cudaMemcpyAsync(shapes.data,scene.shapes.data(),shapes.size,cudaMemcpyHostToDevice,stream.value),"upload shapes");
+    if(shape_nodes.size) check(cudaMemcpyAsync(shape_nodes.data,scene.shape_nodes.data(),shape_nodes.size,cudaMemcpyHostToDevice,stream.value),"upload shape hierarchy");
     stream.sync();out.upload_ms=ms(start);start=Clock::now();
     if(sampled_field) {
         if(sampled_field->size()!=Grid{grid.nx,grid.ny,grid.nz}.samples()) throw std::invalid_argument("sampled field shape mismatch");
@@ -186,7 +232,7 @@ template<class G> ReconstructionResult run_grid(const Scene& scene,const Reconst
             check(cudaMemcpyAsync(field.data,sampled_field->data(),field.size,cudaMemcpyHostToDevice,stream.value),"upload validation field");
         }
     } else {
-        evaluate<<<blocks(grid.samples()),256,0,stream.value>>>(grid,tris.as<Triangle>(),nodes.as<Node>(),shapes.as<Shape>(),scene.shapes.size(),field.as<double>());
+        launch_evaluate(grid,tris.as<Triangle>(),nodes.as<Node>(),shapes.as<Shape>(),scene.shapes.size(),shape_nodes.as<Node>(),scene.shape_nodes.size(),field.as<double>(),stream.value);
         launch_check();
     }
     stream.sync();out.field_ms=ms(start);start=Clock::now();
@@ -236,7 +282,7 @@ template<class G> ReconstructionResult run_grid(const Scene& scene,const Reconst
             Buffer diagnostic(budget,chunk*8);
             for(std::uint64_t offset=0;offset<dense.samples();offset+=chunk) {
                 auto n=std::min(chunk,dense.samples()-offset);
-                evaluate<<<blocks(n),256,0,stream.value>>>(dense,tris.as<Triangle>(),nodes.as<Node>(),shapes.as<Shape>(),scene.shapes.size(),diagnostic.as<double>(),offset,n);
+                launch_evaluate(dense,tris.as<Triangle>(),nodes.as<Node>(),shapes.as<Shape>(),scene.shapes.size(),shape_nodes.as<Node>(),scene.shape_nodes.size(),diagnostic.as<double>(),stream.value,offset,n);
                 launch_check();
                 check(cudaMemcpyAsync(out.field.data()+offset,diagnostic.data,n*8,cudaMemcpyDeviceToHost,stream.value),"download diagnostic chunk");
                 stream.sync();
@@ -288,6 +334,9 @@ ReconstructionResult run_cuda(const Scene& scene,const ReconstructionOptions& op
     sparse.sample_count=topology.samples.size();sparse.cell_count=topology.cells.size();
     auto result=run_grid(scene,options,sparse,&topology,sampled_field);
     result.topology_ms=elapsed;
+    result.topology_candidates_ms=topology.candidates_ms;
+    result.topology_keys_ms=topology.keys_ms;
+    result.topology_index_ms=topology.index_ms;
     return result;
 }
 } // namespace fuse::detail

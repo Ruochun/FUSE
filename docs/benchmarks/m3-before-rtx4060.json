@@ -1,0 +1,2216 @@
+{
+  "version": "0.0.1.dev2",
+  "build": {
+    "nanovdb_revision": "e26f5a569201d3236e0c30580572101022d3d754",
+    "cuda_version": 12080,
+    "cuda_architectures": "80-real,86-real,89-real,90-real,90-virtual",
+    "cuda_runtime": "static",
+    "milestone": 2
+  },
+  "python": "3.13.13",
+  "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "workloads": [
+    {
+      "name": "small_cube",
+      "options": {
+        "voxel_size": 0.04,
+        "backend": "sparse",
+        "validation": "full",
+        "max_memory_bytes": 536870912
+      },
+      "loading_ms": 0,
+      "input_sha256": "17f2b0452ed9f578668fd0956232ebb96e415bd25c6a7dbc55a9ea52cdc30979",
+      "input_triangles": 12,
+      "input_shapes": 1,
+      "vertices": 7502,
+      "triangles": 15000,
+      "peak_device_bytes": 2721287,
+      "median_ms": 12.277750996872783,
+      "first": {
+        "total_ms": 15.141632000450045,
+        "origin": [
+          -0.1,
+          -0.1,
+          -0.1
+        ],
+        "grid_shape": [
+          31,
+          31,
+          31
+        ],
+        "voxel_size": 0.04,
+        "device": 0,
+        "peak_device_bytes": 2721287,
+        "vertex_count": 7502,
+        "triangle_count": 15000,
+        "backend": "sparse_cuda",
+        "candidate_blocks": 56,
+        "active_samples": 26416,
+        "candidate_cells": 22904,
+        "topology_bytes": 571232,
+        "boundary_mode": "full",
+        "timings_ms": {
+          "topology": 8.254118,
+          "prepare": 0.01979,
+          "upload": 1.264869,
+          "field": 1.265466,
+          "extraction": 2.011817,
+          "download": 1.305642
+        }
+      },
+      "runs": [
+        {
+          "total_ms": 12.538501003291458,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 2721287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 56,
+          "active_samples": 26416,
+          "candidate_cells": 22904,
+          "topology_bytes": 571232,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 7.781146,
+            "prepare": 0.012729,
+            "upload": 1.322349,
+            "field": 0.618661,
+            "extraction": 1.164228,
+            "download": 0.54855
+          }
+        },
+        {
+          "total_ms": 12.329861987382174,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 2721287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 56,
+          "active_samples": 26416,
+          "candidate_cells": 22904,
+          "topology_bytes": 571232,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 7.027635,
+            "prepare": 0.012132,
+            "upload": 1.384902,
+            "field": 1.107344,
+            "extraction": 1.265266,
+            "download": 0.519611
+          }
+        },
+        {
+          "total_ms": 12.277750996872783,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 2721287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 56,
+          "active_samples": 26416,
+          "candidate_cells": 22904,
+          "topology_bytes": 571232,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 7.203756,
+            "prepare": 0.014122,
+            "upload": 1.396835,
+            "field": 0.619655,
+            "extraction": 1.269543,
+            "download": 0.566849
+          }
+        },
+        {
+          "total_ms": 11.630151013378054,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 2721287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 56,
+          "active_samples": 26416,
+          "candidate_cells": 22904,
+          "topology_bytes": 571232,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 6.729493,
+            "prepare": 0.015116,
+            "upload": 1.127831,
+            "field": 0.631788,
+            "extraction": 1.383808,
+            "download": 0.711744
+          }
+        },
+        {
+          "total_ms": 12.185960949864239,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 2721287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 56,
+          "active_samples": 26416,
+          "candidate_cells": 22904,
+          "topology_bytes": 571232,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 7.511744,
+            "prepare": 0.014718,
+            "upload": 1.22857,
+            "field": 0.634473,
+            "extraction": 1.221112,
+            "download": 0.569633
+          }
+        },
+        {
+          "total_ms": 11.913576046936214,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 2721287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 56,
+          "active_samples": 26416,
+          "candidate_cells": 22904,
+          "topology_bytes": 571232,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 6.507328,
+            "prepare": 0.014122,
+            "upload": 1.410659,
+            "field": 0.70339,
+            "extraction": 1.618901,
+            "download": 0.654959
+          }
+        },
+        {
+          "total_ms": 12.563463009428233,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 2721287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 56,
+          "active_samples": 26416,
+          "candidate_cells": 22904,
+          "topology_bytes": 571232,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 7.176607,
+            "prepare": 0.013525,
+            "upload": 1.60826,
+            "field": 1.117985,
+            "extraction": 1.289929,
+            "download": 0.502407
+          }
+        }
+      ]
+    },
+    {
+      "name": "large_cube",
+      "options": {
+        "voxel_size": 0.05,
+        "backend": "sparse",
+        "validation": "full",
+        "max_memory_bytes": 536870912
+      },
+      "loading_ms": 0,
+      "input_sha256": "a8d69d48b699c90c979978671dc9797a186ce2f0af2dc921e2e1bb959622738c",
+      "input_triangles": 12,
+      "input_shapes": 1,
+      "vertices": 76802,
+      "triangles": 153600,
+      "peak_device_bytes": 26218311,
+      "median_ms": 66.0226970212534,
+      "first": {
+        "total_ms": 70.10311499470845,
+        "origin": [
+          -0.125,
+          -0.125,
+          -0.125
+        ],
+        "grid_shape": [
+          86,
+          86,
+          86
+        ],
+        "voxel_size": 0.05,
+        "device": 0,
+        "peak_device_bytes": 26218311,
+        "vertex_count": 76802,
+        "triangle_count": 153600,
+        "backend": "sparse_cuda",
+        "candidate_blocks": 602,
+        "active_samples": 278145,
+        "candidate_cells": 240877,
+        "topology_bytes": 3764576,
+        "boundary_mode": "full",
+        "timings_ms": {
+          "topology": 46.872648,
+          "prepare": 0.013525,
+          "upload": 4.661886,
+          "field": 4.802604,
+          "extraction": 5.58217,
+          "download": 5.097166
+        }
+      },
+      "runs": [
+        {
+          "total_ms": 66.1681880010292,
+          "origin": [
+            -0.125,
+            -0.125,
+            -0.125
+          ],
+          "grid_shape": [
+            86,
+            86,
+            86
+          ],
+          "voxel_size": 0.05,
+          "device": 0,
+          "peak_device_bytes": 26218311,
+          "vertex_count": 76802,
+          "triangle_count": 153600,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 602,
+          "active_samples": 278145,
+          "candidate_cells": 240877,
+          "topology_bytes": 3764576,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 44.231827,
+            "prepare": 0.015713,
+            "upload": 4.782614,
+            "field": 4.829554,
+            "extraction": 5.804932,
+            "download": 3.887491
+          }
+        },
+        {
+          "total_ms": 59.36361296335235,
+          "origin": [
+            -0.125,
+            -0.125,
+            -0.125
+          ],
+          "grid_shape": [
+            86,
+            86,
+            86
+          ],
+          "voxel_size": 0.05,
+          "device": 0,
+          "peak_device_bytes": 26218311,
+          "vertex_count": 76802,
+          "triangle_count": 153600,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 602,
+          "active_samples": 278145,
+          "candidate_cells": 240877,
+          "topology_bytes": 3764576,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 37.561406,
+            "prepare": 0.014619,
+            "upload": 4.594163,
+            "field": 5.258867,
+            "extraction": 4.083998,
+            "download": 4.022043
+          }
+        },
+        {
+          "total_ms": 68.1521599763073,
+          "origin": [
+            -0.125,
+            -0.125,
+            -0.125
+          ],
+          "grid_shape": [
+            86,
+            86,
+            86
+          ],
+          "voxel_size": 0.05,
+          "device": 0,
+          "peak_device_bytes": 26218311,
+          "vertex_count": 76802,
+          "triangle_count": 153600,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 602,
+          "active_samples": 278145,
+          "candidate_cells": 240877,
+          "topology_bytes": 3764576,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 44.702112,
+            "prepare": 0.014718,
+            "upload": 5.64512,
+            "field": 4.844372,
+            "extraction": 4.838106,
+            "download": 3.943479
+          }
+        },
+        {
+          "total_ms": 67.99582997336984,
+          "origin": [
+            -0.125,
+            -0.125,
+            -0.125
+          ],
+          "grid_shape": [
+            86,
+            86,
+            86
+          ],
+          "voxel_size": 0.05,
+          "device": 0,
+          "peak_device_bytes": 26218311,
+          "vertex_count": 76802,
+          "triangle_count": 153600,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 602,
+          "active_samples": 278145,
+          "candidate_cells": 240877,
+          "topology_bytes": 3764576,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 47.488722,
+            "prepare": 0.015812,
+            "upload": 4.402527,
+            "field": 4.795742,
+            "extraction": 4.368019,
+            "download": 4.049689
+          }
+        },
+        {
+          "total_ms": 59.3970280024223,
+          "origin": [
+            -0.125,
+            -0.125,
+            -0.125
+          ],
+          "grid_shape": [
+            86,
+            86,
+            86
+          ],
+          "voxel_size": 0.05,
+          "device": 0,
+          "peak_device_bytes": 26218311,
+          "vertex_count": 76802,
+          "triangle_count": 153600,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 602,
+          "active_samples": 278145,
+          "candidate_cells": 240877,
+          "topology_bytes": 3764576,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 36.719089,
+            "prepare": 0.014817,
+            "upload": 4.328738,
+            "field": 6.354974,
+            "extraction": 4.630063,
+            "download": 3.822452
+          }
+        },
+        {
+          "total_ms": 66.0226970212534,
+          "origin": [
+            -0.125,
+            -0.125,
+            -0.125
+          ],
+          "grid_shape": [
+            86,
+            86,
+            86
+          ],
+          "voxel_size": 0.05,
+          "device": 0,
+          "peak_device_bytes": 26218311,
+          "vertex_count": 76802,
+          "triangle_count": 153600,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 602,
+          "active_samples": 278145,
+          "candidate_cells": 240877,
+          "topology_bytes": 3764576,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 43.496912,
+            "prepare": 0.014818,
+            "upload": 4.576162,
+            "field": 6.244787,
+            "extraction": 5.203873,
+            "download": 4.00444
+          }
+        },
+        {
+          "total_ms": 65.47036702977493,
+          "origin": [
+            -0.125,
+            -0.125,
+            -0.125
+          ],
+          "grid_shape": [
+            86,
+            86,
+            86
+          ],
+          "voxel_size": 0.05,
+          "device": 0,
+          "peak_device_bytes": 26218311,
+          "vertex_count": 76802,
+          "triangle_count": 153600,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 602,
+          "active_samples": 278145,
+          "candidate_cells": 240877,
+          "topology_bytes": 3764576,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 43.482493,
+            "prepare": 0.015613,
+            "upload": 4.397058,
+            "field": 6.415439,
+            "extraction": 4.732195,
+            "download": 3.710375
+          }
+        }
+      ]
+    },
+    {
+      "name": "overlap_spheres",
+      "options": {
+        "voxel_size": 0.06,
+        "backend": "sparse",
+        "validation": "full",
+        "max_memory_bytes": 536870912
+      },
+      "loading_ms": 0,
+      "input_sha256": "d60c990e9433f4e1ea808e3e80f603796087608158bc30bdf1d44167affe3e67",
+      "input_triangles": 2048,
+      "input_shapes": 4,
+      "vertices": 11046,
+      "triangles": 22088,
+      "peak_device_bytes": 4898495,
+      "median_ms": 78.50908802356571,
+      "first": {
+        "total_ms": 84.9564490490593,
+        "origin": [
+          -1.1999999999999997,
+          -1.1999999999999997,
+          -0.85
+        ],
+        "grid_shape": [
+          41,
+          41,
+          30
+        ],
+        "voxel_size": 0.06,
+        "device": 0,
+        "peak_device_bytes": 4898495,
+        "vertex_count": 11046,
+        "triangle_count": 22088,
+        "backend": "sparse_cuda",
+        "candidate_blocks": 92,
+        "active_samples": 48030,
+        "candidate_cells": 43840,
+        "topology_bytes": 913376,
+        "boundary_mode": "full",
+        "timings_ms": {
+          "topology": 11.132815,
+          "prepare": 1.247565,
+          "upload": 1.771254,
+          "field": 66.208266,
+          "extraction": 1.791442,
+          "download": 0.798362
+        }
+      },
+      "runs": [
+        {
+          "total_ms": 83.72559200506657,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4898495,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 92,
+          "active_samples": 48030,
+          "candidate_cells": 43840,
+          "topology_bytes": 913376,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 11.495997,
+            "prepare": 1.274515,
+            "upload": 1.723221,
+            "field": 64.396039,
+            "extraction": 1.841961,
+            "download": 0.785235
+          }
+        },
+        {
+          "total_ms": 77.77029497083277,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4898495,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 92,
+          "active_samples": 48030,
+          "candidate_cells": 43840,
+          "topology_bytes": 913376,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 10.770728,
+            "prepare": 1.220714,
+            "upload": 1.838878,
+            "field": 60.429986,
+            "extraction": 1.636304,
+            "download": 0.746649
+          }
+        },
+        {
+          "total_ms": 78.50908802356571,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4898495,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 92,
+          "active_samples": 48030,
+          "candidate_cells": 43840,
+          "topology_bytes": 913376,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 11.443687,
+            "prepare": 1.249852,
+            "upload": 1.766083,
+            "field": 60.350591,
+            "extraction": 1.733675,
+            "download": 0.739308
+          }
+        },
+        {
+          "total_ms": 77.0584240090102,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4898495,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 92,
+          "active_samples": 48030,
+          "candidate_cells": 43840,
+          "topology_bytes": 913376,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 10.621285,
+            "prepare": 1.20166,
+            "upload": 1.750991,
+            "field": 59.479949,
+            "extraction": 2.056108,
+            "download": 0.719603
+          }
+        },
+        {
+          "total_ms": 78.94057699013501,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4898495,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 92,
+          "active_samples": 48030,
+          "candidate_cells": 43840,
+          "topology_bytes": 913376,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 11.370842,
+            "prepare": 1.207831,
+            "upload": 1.920468,
+            "field": 60.816553,
+            "extraction": 1.681131,
+            "download": 0.811357
+          }
+        },
+        {
+          "total_ms": 78.59276799717918,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4898495,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 92,
+          "active_samples": 48030,
+          "candidate_cells": 43840,
+          "topology_bytes": 913376,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 11.880466,
+            "prepare": 1.247139,
+            "upload": 1.915491,
+            "field": 59.911551,
+            "extraction": 1.64212,
+            "download": 0.705671
+          }
+        },
+        {
+          "total_ms": 71.28657301655039,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4898495,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 92,
+          "active_samples": 48030,
+          "candidate_cells": 43840,
+          "topology_bytes": 913376,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 11.457023,
+            "prepare": 1.204049,
+            "upload": 1.723923,
+            "field": 53.442091,
+            "extraction": 1.633561,
+            "download": 0.744581
+          }
+        }
+      ]
+    },
+    {
+      "name": "many_solids",
+      "options": {
+        "voxel_size": 0.1,
+        "backend": "sparse",
+        "validation": "full",
+        "max_memory_bytes": 536870912
+      },
+      "loading_ms": 0,
+      "input_sha256": "e5773655fff84a72d4cb26dbbf6850b045e5be9f4c48e55c31be4cbb8fea777b",
+      "input_triangles": 768,
+      "input_shapes": 64,
+      "vertices": 19328,
+      "triangles": 38400,
+      "peak_device_bytes": 12201183,
+      "median_ms": 52.06627701409161,
+      "first": {
+        "total_ms": 54.551898036152124,
+        "origin": [
+          -0.25,
+          -0.25,
+          -0.25
+        ],
+        "grid_shape": [
+          71,
+          71,
+          71
+        ],
+        "voxel_size": 0.1,
+        "device": 0,
+        "peak_device_bytes": 12201183,
+        "vertex_count": 19328,
+        "triangle_count": 38400,
+        "backend": "sparse_cuda",
+        "candidate_blocks": 216,
+        "active_samples": 125000,
+        "candidate_cells": 97336,
+        "topology_bytes": 3384416,
+        "boundary_mode": "full",
+        "timings_ms": {
+          "topology": 22.33715,
+          "prepare": 0.232769,
+          "upload": 3.344945,
+          "field": 21.669892,
+          "extraction": 2.451686,
+          "download": 1.31491
+        }
+      },
+      "runs": [
+        {
+          "total_ms": 55.77594903297722,
+          "origin": [
+            -0.25,
+            -0.25,
+            -0.25
+          ],
+          "grid_shape": [
+            71,
+            71,
+            71
+          ],
+          "voxel_size": 0.1,
+          "device": 0,
+          "peak_device_bytes": 12201183,
+          "vertex_count": 19328,
+          "triangle_count": 38400,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 216,
+          "active_samples": 125000,
+          "candidate_cells": 97336,
+          "topology_bytes": 3384416,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 22.226985,
+            "prepare": 0.360747,
+            "upload": 3.592044,
+            "field": 22.942308,
+            "extraction": 2.214738,
+            "download": 1.157077
+          }
+        },
+        {
+          "total_ms": 55.61393604148179,
+          "origin": [
+            -0.25,
+            -0.25,
+            -0.25
+          ],
+          "grid_shape": [
+            71,
+            71,
+            71
+          ],
+          "voxel_size": 0.1,
+          "device": 0,
+          "peak_device_bytes": 12201183,
+          "vertex_count": 19328,
+          "triangle_count": 38400,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 216,
+          "active_samples": 125000,
+          "candidate_cells": 97336,
+          "topology_bytes": 3384416,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 23.77755,
+            "prepare": 0.233963,
+            "upload": 3.770577,
+            "field": 21.405876,
+            "extraction": 2.356847,
+            "download": 1.183349
+          }
+        },
+        {
+          "total_ms": 52.30073700658977,
+          "origin": [
+            -0.25,
+            -0.25,
+            -0.25
+          ],
+          "grid_shape": [
+            71,
+            71,
+            71
+          ],
+          "voxel_size": 0.1,
+          "device": 0,
+          "peak_device_bytes": 12201183,
+          "vertex_count": 19328,
+          "triangle_count": 38400,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 216,
+          "active_samples": 125000,
+          "candidate_cells": 97336,
+          "topology_bytes": 3384416,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 21.677256,
+            "prepare": 0.233266,
+            "upload": 3.181141,
+            "field": 21.313822,
+            "extraction": 1.947934,
+            "download": 1.184643
+          }
+        },
+        {
+          "total_ms": 51.84992798604071,
+          "origin": [
+            -0.25,
+            -0.25,
+            -0.25
+          ],
+          "grid_shape": [
+            71,
+            71,
+            71
+          ],
+          "voxel_size": 0.1,
+          "device": 0,
+          "peak_device_bytes": 12201183,
+          "vertex_count": 19328,
+          "triangle_count": 38400,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 216,
+          "active_samples": 125000,
+          "candidate_cells": 97336,
+          "topology_bytes": 3384416,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 20.678908,
+            "prepare": 0.224708,
+            "upload": 3.272398,
+            "field": 21.386271,
+            "extraction": 2.433474,
+            "download": 1.244751
+          }
+        },
+        {
+          "total_ms": 52.06627701409161,
+          "origin": [
+            -0.25,
+            -0.25,
+            -0.25
+          ],
+          "grid_shape": [
+            71,
+            71,
+            71
+          ],
+          "voxel_size": 0.1,
+          "device": 0,
+          "peak_device_bytes": 12201183,
+          "vertex_count": 19328,
+          "triangle_count": 38400,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 216,
+          "active_samples": 125000,
+          "candidate_cells": 97336,
+          "topology_bytes": 3384416,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 21.826431,
+            "prepare": 0.23247,
+            "upload": 3.066896,
+            "field": 21.541715,
+            "extraction": 2.034811,
+            "download": 1.192008
+          }
+        },
+        {
+          "total_ms": 50.03803299041465,
+          "origin": [
+            -0.25,
+            -0.25,
+            -0.25
+          ],
+          "grid_shape": [
+            71,
+            71,
+            71
+          ],
+          "voxel_size": 0.1,
+          "device": 0,
+          "peak_device_bytes": 12201183,
+          "vertex_count": 19328,
+          "triangle_count": 38400,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 216,
+          "active_samples": 125000,
+          "candidate_cells": 97336,
+          "topology_bytes": 3384416,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 18.990911,
+            "prepare": 0.251379,
+            "upload": 3.214877,
+            "field": 21.972621,
+            "extraction": 1.982963,
+            "download": 1.269132
+          }
+        },
+        {
+          "total_ms": 50.97348697017878,
+          "origin": [
+            -0.25,
+            -0.25,
+            -0.25
+          ],
+          "grid_shape": [
+            71,
+            71,
+            71
+          ],
+          "voxel_size": 0.1,
+          "device": 0,
+          "peak_device_bytes": 12201183,
+          "vertex_count": 19328,
+          "triangle_count": 38400,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 216,
+          "active_samples": 125000,
+          "candidate_cells": 97336,
+          "topology_bytes": 3384416,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 19.167454,
+            "prepare": 0.276457,
+            "upload": 3.190595,
+            "field": 22.41716,
+            "extraction": 2.032522,
+            "download": 1.112294
+          }
+        }
+      ]
+    },
+    {
+      "name": "detailed_shell",
+      "options": {
+        "voxel_size": 0.08,
+        "backend": "sparse",
+        "validation": "full",
+        "max_memory_bytes": 536870912
+      },
+      "loading_ms": 0,
+      "input_sha256": "b93451db7ff3f9c50a2379aae3198dd5b562797099f95453092ee5c74795275d",
+      "input_triangles": 8192,
+      "input_shapes": 1,
+      "vertices": 5870,
+      "triangles": 11736,
+      "peak_device_bytes": 3408135,
+      "median_ms": 90.46095603844151,
+      "first": {
+        "total_ms": 89.20061698881909,
+        "origin": [
+          -1.2,
+          -1.2,
+          -1.2
+        ],
+        "grid_shape": [
+          31,
+          31,
+          31
+        ],
+        "voxel_size": 0.08,
+        "device": 0,
+        "peak_device_bytes": 3408135,
+        "vertex_count": 5870,
+        "triangle_count": 11736,
+        "backend": "sparse_cuda",
+        "candidate_blocks": 50,
+        "active_samples": 25380,
+        "candidate_cells": 22528,
+        "topology_bytes": 575456,
+        "boundary_mode": "full",
+        "timings_ms": {
+          "topology": 8.089488,
+          "prepare": 6.489862,
+          "upload": 1.760146,
+          "field": 70.108001,
+          "extraction": 1.338794,
+          "download": 0.43001
+        }
+      },
+      "runs": [
+        {
+          "total_ms": 93.69238902581856,
+          "origin": [
+            -1.2,
+            -1.2,
+            -1.2
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.08,
+          "device": 0,
+          "peak_device_bytes": 3408135,
+          "vertex_count": 5870,
+          "triangle_count": 11736,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 50,
+          "active_samples": 25380,
+          "candidate_cells": 22528,
+          "topology_bytes": 575456,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.776151,
+            "prepare": 6.657547,
+            "upload": 1.54947,
+            "field": 73.478521,
+            "extraction": 1.649583,
+            "download": 0.540971
+          }
+        },
+        {
+          "total_ms": 91.8428529985249,
+          "origin": [
+            -1.2,
+            -1.2,
+            -1.2
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.08,
+          "device": 0,
+          "peak_device_bytes": 3408135,
+          "vertex_count": 5870,
+          "triangle_count": 11736,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 50,
+          "active_samples": 25380,
+          "candidate_cells": 22528,
+          "topology_bytes": 575456,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.670465,
+            "prepare": 7.024165,
+            "upload": 1.532752,
+            "field": 70.984567,
+            "extraction": 1.852728,
+            "download": 0.589594
+          }
+        },
+        {
+          "total_ms": 92.28968597017229,
+          "origin": [
+            -1.2,
+            -1.2,
+            -1.2
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.08,
+          "device": 0,
+          "peak_device_bytes": 3408135,
+          "vertex_count": 5870,
+          "triangle_count": 11736,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 50,
+          "active_samples": 25380,
+          "candidate_cells": 22528,
+          "topology_bytes": 575456,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.546588,
+            "prepare": 6.416339,
+            "upload": 1.822556,
+            "field": 72.37231,
+            "extraction": 1.501123,
+            "download": 0.475679
+          }
+        },
+        {
+          "total_ms": 90.46095603844151,
+          "origin": [
+            -1.2,
+            -1.2,
+            -1.2
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.08,
+          "device": 0,
+          "peak_device_bytes": 3408135,
+          "vertex_count": 5870,
+          "triangle_count": 11736,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 50,
+          "active_samples": 25380,
+          "candidate_cells": 22528,
+          "topology_bytes": 575456,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.306707,
+            "prepare": 6.399311,
+            "upload": 1.519644,
+            "field": 71.011791,
+            "extraction": 1.644115,
+            "download": 0.470103
+          }
+        },
+        {
+          "total_ms": 88.22206797776744,
+          "origin": [
+            -1.2,
+            -1.2,
+            -1.2
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.08,
+          "device": 0,
+          "peak_device_bytes": 3408135,
+          "vertex_count": 5870,
+          "triangle_count": 11736,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 50,
+          "active_samples": 25380,
+          "candidate_cells": 22528,
+          "topology_bytes": 575456,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 7.85403,
+            "prepare": 6.236005,
+            "upload": 1.323576,
+            "field": 69.894637,
+            "extraction": 1.317403,
+            "download": 0.52945
+          }
+        },
+        {
+          "total_ms": 88.68241298478097,
+          "origin": [
+            -1.2,
+            -1.2,
+            -1.2
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.08,
+          "device": 0,
+          "peak_device_bytes": 3408135,
+          "vertex_count": 5870,
+          "triangle_count": 11736,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 50,
+          "active_samples": 25380,
+          "candidate_cells": 22528,
+          "topology_bytes": 575456,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.644173,
+            "prepare": 6.639192,
+            "upload": 1.386011,
+            "field": 69.056598,
+            "extraction": 1.429228,
+            "download": 0.449988
+          }
+        },
+        {
+          "total_ms": 88.82560499478132,
+          "origin": [
+            -1.2,
+            -1.2,
+            -1.2
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.08,
+          "device": 0,
+          "peak_device_bytes": 3408135,
+          "vertex_count": 5870,
+          "triangle_count": 11736,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 50,
+          "active_samples": 25380,
+          "candidate_cells": 22528,
+          "topology_bytes": 575456,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.408275,
+            "prepare": 6.221965,
+            "upload": 1.454222,
+            "field": 69.09842,
+            "extraction": 1.932689,
+            "download": 0.558129
+          }
+        }
+      ]
+    },
+    {
+      "name": "torus",
+      "options": {
+        "voxel_size": 0.06,
+        "backend": "sparse",
+        "validation": "full",
+        "max_memory_bytes": 536870912
+      },
+      "loading_ms": 0,
+      "input_sha256": "b8a897a4043eb0a40d42d8555524bb553fc15e53fc47d9f6a03a459300a972bd",
+      "input_triangles": 1600,
+      "input_shapes": 1,
+      "vertices": 11232,
+      "triangles": 22464,
+      "peak_device_bytes": 4135511,
+      "median_ms": 45.18960101995617,
+      "first": {
+        "total_ms": 44.69828901346773,
+        "origin": [
+          -1.5,
+          -1.5,
+          -0.5
+        ],
+        "grid_shape": [
+          52,
+          52,
+          18
+        ],
+        "voxel_size": 0.06,
+        "device": 0,
+        "peak_device_bytes": 4135511,
+        "vertex_count": 11232,
+        "triangle_count": 22464,
+        "backend": "sparse_cuda",
+        "candidate_blocks": 64,
+        "active_samples": 36720,
+        "candidate_cells": 32768,
+        "topology_bytes": 888032,
+        "boundary_mode": "full",
+        "timings_ms": {
+          "topology": 9.24751,
+          "prepare": 1.021062,
+          "upload": 1.238438,
+          "field": 29.007455,
+          "extraction": 2.274238,
+          "download": 0.782675
+        }
+      },
+      "runs": [
+        {
+          "total_ms": 44.37765100738034,
+          "origin": [
+            -1.5,
+            -1.5,
+            -0.5
+          ],
+          "grid_shape": [
+            52,
+            52,
+            18
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4135511,
+          "vertex_count": 11232,
+          "triangle_count": 22464,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 64,
+          "active_samples": 36720,
+          "candidate_cells": 32768,
+          "topology_bytes": 888032,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.267972,
+            "prepare": 1.050736,
+            "upload": 1.396964,
+            "field": 29.727994,
+            "extraction": 2.104857,
+            "download": 0.744437
+          }
+        },
+        {
+          "total_ms": 44.31989701697603,
+          "origin": [
+            -1.5,
+            -1.5,
+            -0.5
+          ],
+          "grid_shape": [
+            52,
+            52,
+            18
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4135511,
+          "vertex_count": 11232,
+          "triangle_count": 22464,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 64,
+          "active_samples": 36720,
+          "candidate_cells": 32768,
+          "topology_bytes": 888032,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.832174,
+            "prepare": 0.921386,
+            "upload": 1.462187,
+            "field": 28.508475,
+            "extraction": 2.602841,
+            "download": 0.738761
+          }
+        },
+        {
+          "total_ms": 45.62405601609498,
+          "origin": [
+            -1.5,
+            -1.5,
+            -0.5
+          ],
+          "grid_shape": [
+            52,
+            52,
+            18
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4135511,
+          "vertex_count": 11232,
+          "triangle_count": 22464,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 64,
+          "active_samples": 36720,
+          "candidate_cells": 32768,
+          "topology_bytes": 888032,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 9.311737,
+            "prepare": 1.137467,
+            "upload": 1.401844,
+            "field": 29.602129,
+            "extraction": 2.052978,
+            "download": 0.749515
+          }
+        },
+        {
+          "total_ms": 46.724081970751286,
+          "origin": [
+            -1.5,
+            -1.5,
+            -0.5
+          ],
+          "grid_shape": [
+            52,
+            52,
+            18
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4135511,
+          "vertex_count": 11232,
+          "triangle_count": 22464,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 64,
+          "active_samples": 36720,
+          "candidate_cells": 32768,
+          "topology_bytes": 888032,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.77203,
+            "prepare": 1.155988,
+            "upload": 1.427236,
+            "field": 31.507434,
+            "extraction": 1.962861,
+            "download": 0.699827
+          }
+        },
+        {
+          "total_ms": 45.13513302663341,
+          "origin": [
+            -1.5,
+            -1.5,
+            -0.5
+          ],
+          "grid_shape": [
+            52,
+            52,
+            18
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4135511,
+          "vertex_count": 11232,
+          "triangle_count": 22464,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 64,
+          "active_samples": 36720,
+          "candidate_cells": 32768,
+          "topology_bytes": 888032,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.975764,
+            "prepare": 1.050238,
+            "upload": 1.489671,
+            "field": 29.558415,
+            "extraction": 1.996219,
+            "download": 0.747126
+          }
+        },
+        {
+          "total_ms": 45.18960101995617,
+          "origin": [
+            -1.5,
+            -1.5,
+            -0.5
+          ],
+          "grid_shape": [
+            52,
+            52,
+            18
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4135511,
+          "vertex_count": 11232,
+          "triangle_count": 22464,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 64,
+          "active_samples": 36720,
+          "candidate_cells": 32768,
+          "topology_bytes": 888032,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.993191,
+            "prepare": 1.212946,
+            "upload": 1.495446,
+            "field": 29.106136,
+            "extraction": 2.324624,
+            "download": 0.789943
+          }
+        },
+        {
+          "total_ms": 45.51960004027933,
+          "origin": [
+            -1.5,
+            -1.5,
+            -0.5
+          ],
+          "grid_shape": [
+            52,
+            52,
+            18
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 4135511,
+          "vertex_count": 11232,
+          "triangle_count": 22464,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 64,
+          "active_samples": 36720,
+          "candidate_cells": 32768,
+          "topology_bytes": 888032,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 8.996377,
+            "prepare": 1.120937,
+            "upload": 1.31571,
+            "field": 29.578927,
+            "extraction": 2.234008,
+            "download": 0.819119
+          }
+        }
+      ]
+    },
+    {
+      "name": "containment",
+      "options": {
+        "voxel_size": 0.25,
+        "backend": "sparse",
+        "validation": "full",
+        "max_memory_bytes": 536870912
+      },
+      "loading_ms": 0,
+      "input_sha256": "64d34792679884d0d328177a953bbe7888547fc9252946df1db845b51ab466e6",
+      "input_triangles": 24,
+      "input_shapes": 2,
+      "vertices": 49154,
+      "triangles": 98304,
+      "peak_device_bytes": 17167559,
+      "median_ms": 44.32613798417151,
+      "first": {
+        "total_ms": 43.85477298637852,
+        "origin": [
+          -0.625,
+          -0.625,
+          -0.625
+        ],
+        "grid_shape": [
+          70,
+          70,
+          70
+        ],
+        "voxel_size": 0.25,
+        "device": 0,
+        "peak_device_bytes": 17167559,
+        "vertex_count": 49154,
+        "triangle_count": 98304,
+        "backend": "sparse_cuda",
+        "candidate_blocks": 394,
+        "active_samples": 181538,
+        "candidate_cells": 156989,
+        "topology_bytes": 2586080,
+        "boundary_mode": "full",
+        "timings_ms": {
+          "topology": 27.295031,
+          "prepare": 0.041026,
+          "upload": 3.85522,
+          "field": 3.694902,
+          "extraction": 4.069808,
+          "download": 2.497091
+        }
+      },
+      "runs": [
+        {
+          "total_ms": 42.843867966439575,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            70,
+            70,
+            70
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 17167559,
+          "vertex_count": 49154,
+          "triangle_count": 98304,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 394,
+          "active_samples": 181538,
+          "candidate_cells": 156989,
+          "topology_bytes": 2586080,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 26.724953,
+            "prepare": 0.020015,
+            "upload": 3.759228,
+            "field": 2.934133,
+            "extraction": 3.833711,
+            "download": 2.530847
+          }
+        },
+        {
+          "total_ms": 45.87548697600141,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            70,
+            70,
+            70
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 17167559,
+          "vertex_count": 49154,
+          "triangle_count": 98304,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 394,
+          "active_samples": 181538,
+          "candidate_cells": 156989,
+          "topology_bytes": 2586080,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 28.276461,
+            "prepare": 0.036843,
+            "upload": 3.857113,
+            "field": 3.010011,
+            "extraction": 3.76112,
+            "download": 3.833711
+          }
+        },
+        {
+          "total_ms": 42.29248297633603,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            70,
+            70,
+            70
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 17167559,
+          "vertex_count": 49154,
+          "triangle_count": 98304,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 394,
+          "active_samples": 181538,
+          "candidate_cells": 156989,
+          "topology_bytes": 2586080,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 25.164496,
+            "prepare": 0.020513,
+            "upload": 3.867034,
+            "field": 2.96648,
+            "extraction": 4.236861,
+            "download": 2.448206
+          }
+        },
+        {
+          "total_ms": 44.32613798417151,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            70,
+            70,
+            70
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 17167559,
+          "vertex_count": 49154,
+          "triangle_count": 98304,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 394,
+          "active_samples": 181538,
+          "candidate_cells": 156989,
+          "topology_bytes": 2586080,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 27.264817,
+            "prepare": 0.019727,
+            "upload": 3.914459,
+            "field": 3.531083,
+            "extraction": 3.837644,
+            "download": 2.758452
+          }
+        },
+        {
+          "total_ms": 44.7477709967643,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            70,
+            70,
+            70
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 17167559,
+          "vertex_count": 49154,
+          "triangle_count": 98304,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 394,
+          "active_samples": 181538,
+          "candidate_cells": 156989,
+          "topology_bytes": 2586080,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 25.760007,
+            "prepare": 0.019726,
+            "upload": 3.834456,
+            "field": 5.090091,
+            "extraction": 3.906588,
+            "download": 2.661114
+          }
+        },
+        {
+          "total_ms": 45.73171603260562,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            70,
+            70,
+            70
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 17167559,
+          "vertex_count": 49154,
+          "triangle_count": 98304,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 394,
+          "active_samples": 181538,
+          "candidate_cells": 156989,
+          "topology_bytes": 2586080,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 27.461984,
+            "prepare": 0.018531,
+            "upload": 4.267946,
+            "field": 2.958809,
+            "extraction": 4.491814,
+            "download": 3.700753
+          }
+        },
+        {
+          "total_ms": 42.40338102681562,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            70,
+            70,
+            70
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 17167559,
+          "vertex_count": 49154,
+          "triangle_count": 98304,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 394,
+          "active_samples": 181538,
+          "candidate_cells": 156989,
+          "topology_bytes": 2586080,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 24.90847,
+            "prepare": 0.020325,
+            "upload": 4.026941,
+            "field": 2.942669,
+            "extraction": 4.302617,
+            "download": 2.650753
+          }
+        }
+      ]
+    },
+    {
+      "name": "distant_cubes",
+      "options": {
+        "voxel_size": 0.25,
+        "backend": "sparse",
+        "validation": "full",
+        "max_memory_bytes": 536870912
+      },
+      "loading_ms": 0,
+      "input_sha256": "8a32bea0f90481c8decb0ca7672932c9e457fbadcd157fc9d2b7bc1d568cf3fd",
+      "input_triangles": 24,
+      "input_shapes": 2,
+      "vertices": 388,
+      "triangles": 768,
+      "peak_device_bytes": 791391,
+      "median_ms": 6.373224954586476,
+      "first": {
+        "total_ms": 6.937228958122432,
+        "origin": [
+          -0.625,
+          -0.625,
+          -0.625
+        ],
+        "grid_shape": [
+          16394,
+          16394,
+          16394
+        ],
+        "voxel_size": 0.25,
+        "device": 0,
+        "peak_device_bytes": 791391,
+        "vertex_count": 388,
+        "triangle_count": 768,
+        "backend": "sparse_cuda",
+        "candidate_blocks": 2,
+        "active_samples": 1458,
+        "candidate_cells": 1024,
+        "topology_bytes": 676992,
+        "boundary_mode": "full",
+        "timings_ms": {
+          "topology": 4.434427,
+          "prepare": 0.019029,
+          "upload": 1.118943,
+          "field": 0.269997,
+          "extraction": 0.485198,
+          "download": 0.119057
+        }
+      },
+      "runs": [
+        {
+          "total_ms": 8.255632012151182,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            16394,
+            16394,
+            16394
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 791391,
+          "vertex_count": 388,
+          "triangle_count": 768,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 2,
+          "active_samples": 1458,
+          "candidate_cells": 1024,
+          "topology_bytes": 676992,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 5.593223,
+            "prepare": 0.016239,
+            "upload": 1.20871,
+            "field": 0.274878,
+            "extraction": 0.518374,
+            "download": 0.122944
+          }
+        },
+        {
+          "total_ms": 6.534126994665712,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            16394,
+            16394,
+            16394
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 791391,
+          "vertex_count": 388,
+          "triangle_count": 768,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 2,
+          "active_samples": 1458,
+          "candidate_cells": 1024,
+          "topology_bytes": 676992,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 3.937572,
+            "prepare": 0.017137,
+            "upload": 1.210105,
+            "field": 0.217393,
+            "extraction": 0.549957,
+            "download": 0.121249
+          }
+        },
+        {
+          "total_ms": 6.009178003296256,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            16394,
+            16394,
+            16394
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 791391,
+          "vertex_count": 388,
+          "triangle_count": 768,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 2,
+          "active_samples": 1458,
+          "candidate_cells": 1024,
+          "topology_bytes": 676992,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 3.55619,
+            "prepare": 0.016041,
+            "upload": 0.941702,
+            "field": 0.276771,
+            "extraction": 0.565001,
+            "download": 0.144165
+          }
+        },
+        {
+          "total_ms": 6.033885001670569,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            16394,
+            16394,
+            16394
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 791391,
+          "vertex_count": 388,
+          "triangle_count": 768,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 2,
+          "active_samples": 1458,
+          "candidate_cells": 1024,
+          "topology_bytes": 676992,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 3.554097,
+            "prepare": 0.01614,
+            "upload": 1.050896,
+            "field": 0.221179,
+            "extraction": 0.559621,
+            "download": 0.131312
+          }
+        },
+        {
+          "total_ms": 5.305791040882468,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            16394,
+            16394,
+            16394
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 791391,
+          "vertex_count": 388,
+          "triangle_count": 768,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 2,
+          "active_samples": 1458,
+          "candidate_cells": 1024,
+          "topology_bytes": 676992,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 3.074678,
+            "prepare": 0.01624,
+            "upload": 0.907927,
+            "field": 0.22616,
+            "extraction": 0.449132,
+            "download": 0.119457
+          }
+        },
+        {
+          "total_ms": 6.373224954586476,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            16394,
+            16394,
+            16394
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 791391,
+          "vertex_count": 388,
+          "triangle_count": 768,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 2,
+          "active_samples": 1458,
+          "candidate_cells": 1024,
+          "topology_bytes": 676992,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 3.904994,
+            "prepare": 0.015642,
+            "upload": 0.940706,
+            "field": 0.232935,
+            "extraction": 0.572872,
+            "download": 0.226857
+          }
+        },
+        {
+          "total_ms": 7.537898025475442,
+          "origin": [
+            -0.625,
+            -0.625,
+            -0.625
+          ],
+          "grid_shape": [
+            16394,
+            16394,
+            16394
+          ],
+          "voxel_size": 0.25,
+          "device": 0,
+          "peak_device_bytes": 791391,
+          "vertex_count": 388,
+          "triangle_count": 768,
+          "backend": "sparse_cuda",
+          "candidate_blocks": 2,
+          "active_samples": 1458,
+          "candidate_cells": 1024,
+          "topology_bytes": 676992,
+          "boundary_mode": "full",
+          "timings_ms": {
+            "topology": 4.991159,
+            "prepare": 0.016339,
+            "upload": 1.021107,
+            "field": 0.234927,
+            "extraction": 0.536806,
+            "download": 0.17764
+          }
+        }
+      ]
+    }
+  ],
+  "gpu": "NVIDIA GeForce RTX 4060, 595.97, 8188 MiB",
+  "startup_ms": 826.9625499960966
+}

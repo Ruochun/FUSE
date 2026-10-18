@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
-project(FUSE VERSION 0.0.1 LANGUAGES CXX CUDA)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" FUSE_VERSION)
+string(STRIP "${FUSE_VERSION}" FUSE_VERSION)
+if(NOT FUSE_VERSION MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
+  message(FATAL_ERROR "VERSION must contain a release version MAJOR.MINOR.PATCH")
+endif()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
+project(FUSE VERSION ${FUSE_VERSION} LANGUAGES CXX CUDA)
 
 option(FUSE_BUILD_PYTHON "Build the fusemesh Python extension" ON)
 option(FUSE_BUILD_TESTS "Build native validation tests" OFF)
@@ -36,7 +42,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/openvdb/.git")
 endif()
 string(REPLACE ";" "," FUSE_ARCH_STRING "${FUSE_CUDA_ARCHITECTURES}")
 configure_file(cmake/build_config.h.in generated/fuse/build_config.h @ONLY)
-add_library(fuse STATIC src/cuda/smoke.cu src/core/reconstruct.cpp
+add_library(fuse STATIC src/cuda/smoke.cu src/core/reconstruct.cpp src/core/version.cpp
   src/geometry/scene.cpp src/volume/topology.cpp src/cuda/reconstruct.cu)
 add_library(FUSE::fuse ALIAS fuse)
 target_include_directories(fuse PUBLIC
@@ -64,10 +70,17 @@ if(NOT SKBUILD)
   install(EXPORT FUSETARGETS NAMESPACE FUSE:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/FUSE)
   configure_package_config_file(cmake/FUSEConfig.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/FUSEConfig.cmake"
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/FUSE)
-  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/FUSEConfig.cmake" DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/FUSE)
+  write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/FUSEConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION} COMPATIBILITY ExactVersion)
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/FUSEConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/FUSEConfig.cmake" DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/FUSE)
 endif()
 if(FUSE_BUILD_TESTS)
   enable_testing()
+  add_executable(fuse_version tests/native_version.cpp)
+  target_compile_definitions(fuse_version PRIVATE FUSE_EXPECTED_VERSION="${PROJECT_VERSION}")
+  target_link_libraries(fuse_version PRIVATE FUSE::fuse)
+  add_test(NAME fuse_version COMMAND fuse_version)
   add_executable(fuse_smoke tests/native_smoke.cpp)
   target_link_libraries(fuse_smoke PRIVATE FUSE::fuse)
   add_test(NAME fuse_smoke COMMAND fuse_smoke)

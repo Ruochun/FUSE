@@ -35,6 +35,7 @@ struct ReconstructionResult {
     std::uint64_t peak_device_bytes = 0; // FUSE allocations, excluding CUDA context
     std::uint64_t candidate_blocks = 0, active_samples = 0, candidate_cells = 0, topology_bytes = 0;
     double topology_ms = 0;
+    double topology_candidates_ms = 0, topology_keys_ms = 0, topology_index_ms = 0;
     double prepare_ms = 0, upload_ms = 0, field_ms = 0, extraction_ms = 0, download_ms = 0;
 };
 // Synchronous. Inputs remain valid and unchanged until return. No Python or

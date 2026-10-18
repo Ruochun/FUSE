@@ -84,6 +84,8 @@ and index checks and does not repair the mesh or guarantee correct inside/outsid
 classification for open or nonmanifold inputs. The selected mode is recorded in
 the JSON output.
 
+The file demo currently defaults to a 16 GiB device-buffer limit; the library
+default remains 512 MiB. Set `--memory-mib` explicitly for reproducible runs.
 The command prints input/output counts, loading and
 reconstruction wall time, backend stage timings, and peak FUSE device-buffer
 bytes. Omit dense diagnostic fields for large workloads. Reconstruction

@@ -8,6 +8,7 @@ struct SparseTopology {
     std::vector<std::uint64_t> samples, cells;
     std::vector<unsigned char> grid;
     std::uint64_t blocks = 0;
+    double candidates_ms = 0, keys_ms = 0, index_ms = 0;
 };
 SparseTopology make_topology(const Scene&, const ReconstructionOptions&);
 }

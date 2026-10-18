@@ -52,13 +52,27 @@ __device__ inline bool ray_hit(Vec p,Triangle t) {
 }
 __device__ inline double signed_distance(Vec p,const Shape& shape,const Node* nodes,const Triangle* tris) {
     double distance=INFINITY;
+    // The host builds a balanced median BVH with <= UINT32_MAX/2 triangles
+    // and <=4 triangles per leaf. Its depth is below 32, so one pending far
+    // child per level fits this fixed traversal stack.
+    std::uint32_t pending[32];int count=0;
     auto index=shape.root;
-    while (index<shape.end) {
+    while(true) {
         const Node& n=nodes[index];
-        if (n.bounds.distance2(p)>distance) { index=n.escape; continue; }
-        for (std::uint32_t j=0;j<n.count;++j)
-            distance=minval(distance,triangle_distance2(p,tris[n.begin+j]));
-        ++index;
+        if(n.bounds.distance2(p)<=distance) {
+            if(n.count) {
+                for(std::uint32_t j=0;j<n.count;++j)
+                    distance=minval(distance,triangle_distance2(p,tris[n.begin+j]));
+            } else {
+                auto near=index+1,far=nodes[near].escape;
+                auto dn=nodes[near].bounds.distance2(p),df=nodes[far].bounds.distance2(p);
+                if(df<dn) {auto swap=near;near=far;far=swap;double d=dn;dn=df;df=d;}
+                if(df<=distance) pending[count++]=far;
+                if(dn<=distance) {index=near;continue;}
+            }
+        }
+        if(!count) break;
+        index=pending[--count];
     }
     bool inside=false;
     if (shape.bounds.contains(p) && distance>1e-24) {
