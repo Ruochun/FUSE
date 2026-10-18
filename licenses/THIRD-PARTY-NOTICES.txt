@@ -11,3 +11,13 @@ The NVIDIA driver is not included. CUDA components are not under FUSE's BSD lice
 
 Nanobind and its bundled robin_map: see nanobind-LICENSE.txt and
 robin-map-LICENSE.txt. These notices accompany the compiled Python binding.
+
+CUB (CUDA 12.8 bundled headers; used for device prefix scans)
+Copyright (c) 2011, Duane Merrill. All rights reserved.
+Copyright (c) 2011-2022, NVIDIA CORPORATION. All rights reserved.
+BSD-3-Clause; see CUB-LICENSE.txt.
+
+libcu++ / CUDA C++ Core Libraries headers (CUDA 12.8)
+Copyright NVIDIA CORPORATION & AFFILIATES and LLVM contributors.
+Apache-2.0 WITH LLVM-exception; see LLVM-Apache-2.0-exception.txt.
+License source referenced by the CUDA headers: https://llvm.org/LICENSE.txt

@@ -1,0 +1,365 @@
+{
+  "python": "3.13.13",
+  "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "build": {
+    "nanovdb_revision": "e26f5a569201d3236e0c30580572101022d3d754",
+    "cuda_version": 12080,
+    "cuda_architectures": "80-real,86-real,89-real,90-real,90-virtual",
+    "cuda_runtime": "static",
+    "milestone": 1
+  },
+  "workloads": [
+    {
+      "name": "cube",
+      "shape_count": 1,
+      "input_triangles": 12,
+      "voxel_size": 0.04,
+      "cold": {
+        "total_ms": 389.45206100470386,
+        "origin": [
+          -0.1,
+          -0.1,
+          -0.1
+        ],
+        "grid_shape": [
+          31,
+          31,
+          31
+        ],
+        "voxel_size": 0.04,
+        "device": 0,
+        "peak_device_bytes": 1929287,
+        "vertex_count": 7502,
+        "triangle_count": 15000,
+        "backend": "dense_cuda",
+        "boundary_mode": "full",
+        "timings_ms": {
+          "prepare": 0.017117,
+          "upload": 2.839309,
+          "field": 3.899892,
+          "extraction": 2.25875,
+          "download": 1.21355
+        }
+      },
+      "warm_median_total_ms": 3.72850798885338,
+      "warm_runs": [
+        {
+          "total_ms": 4.108541994355619,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 1929287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "dense_cuda",
+          "boundary_mode": "full",
+          "timings_ms": {
+            "prepare": 0.01365,
+            "upload": 0.804591,
+            "field": 0.775017,
+            "extraction": 0.95095,
+            "download": 0.872517
+          }
+        },
+        {
+          "total_ms": 3.72850798885338,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 1929287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "dense_cuda",
+          "boundary_mode": "full",
+          "timings_ms": {
+            "prepare": 0.011375,
+            "upload": 0.7072,
+            "field": 0.732225,
+            "extraction": 0.810984,
+            "download": 0.823659
+          }
+        },
+        {
+          "total_ms": 3.418782987864688,
+          "origin": [
+            -0.1,
+            -0.1,
+            -0.1
+          ],
+          "grid_shape": [
+            31,
+            31,
+            31
+          ],
+          "voxel_size": 0.04,
+          "device": 0,
+          "peak_device_bytes": 1929287,
+          "vertex_count": 7502,
+          "triangle_count": 15000,
+          "backend": "dense_cuda",
+          "boundary_mode": "full",
+          "timings_ms": {
+            "prepare": 0.009859,
+            "upload": 0.700484,
+            "field": 0.7436,
+            "extraction": 0.8359,
+            "download": 0.617716
+          }
+        }
+      ]
+    },
+    {
+      "name": "overlap_4_spheres",
+      "shape_count": 4,
+      "input_triangles": 2048,
+      "voxel_size": 0.06,
+      "cold": {
+        "total_ms": 78.44178599771112,
+        "origin": [
+          -1.1999999999999997,
+          -1.1999999999999997,
+          -0.85
+        ],
+        "grid_shape": [
+          41,
+          41,
+          30
+        ],
+        "voxel_size": 0.06,
+        "device": 0,
+        "peak_device_bytes": 3367919,
+        "vertex_count": 11046,
+        "triangle_count": 22088,
+        "backend": "dense_cuda",
+        "boundary_mode": "full",
+        "timings_ms": {
+          "prepare": 1.356767,
+          "upload": 1.138475,
+          "field": 71.435977,
+          "extraction": 2.276516,
+          "download": 1.205533
+        }
+      },
+      "warm_median_total_ms": 78.3181769947987,
+      "warm_runs": [
+        {
+          "total_ms": 73.9089020062238,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 3367919,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "dense_cuda",
+          "boundary_mode": "full",
+          "timings_ms": {
+            "prepare": 1.366409,
+            "upload": 0.874575,
+            "field": 67.32321,
+            "extraction": 2.192125,
+            "download": 1.092217
+          }
+        },
+        {
+          "total_ms": 78.3181769947987,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 3367919,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "dense_cuda",
+          "boundary_mode": "full",
+          "timings_ms": {
+            "prepare": 1.3637,
+            "upload": 0.859733,
+            "field": 71.916761,
+            "extraction": 2.051942,
+            "download": 0.870025
+          }
+        },
+        {
+          "total_ms": 78.89797698589973,
+          "origin": [
+            -1.1999999999999997,
+            -1.1999999999999997,
+            -0.85
+          ],
+          "grid_shape": [
+            41,
+            41,
+            30
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 3367919,
+          "vertex_count": 11046,
+          "triangle_count": 22088,
+          "backend": "dense_cuda",
+          "boundary_mode": "full",
+          "timings_ms": {
+            "prepare": 1.2883,
+            "upload": 1.023208,
+            "field": 72.487244,
+            "extraction": 2.117483,
+            "download": 0.846626
+          }
+        }
+      ]
+    },
+    {
+      "name": "containment",
+      "shape_count": 2,
+      "input_triangles": 24,
+      "voxel_size": 0.06,
+      "cold": {
+        "total_ms": 12.428541987901554,
+        "origin": [
+          -0.15,
+          -0.15,
+          -0.15
+        ],
+        "grid_shape": [
+          56,
+          56,
+          56
+        ],
+        "voxel_size": 0.06,
+        "device": 0,
+        "peak_device_bytes": 10454735,
+        "vertex_count": 30002,
+        "triangle_count": 60000,
+        "backend": "dense_cuda",
+        "boundary_mode": "full",
+        "timings_ms": {
+          "prepare": 0.01755,
+          "upload": 0.814558,
+          "field": 3.323342,
+          "extraction": 3.5893,
+          "download": 2.605634
+        }
+      },
+      "warm_median_total_ms": 11.969858984230086,
+      "warm_runs": [
+        {
+          "total_ms": 13.168567005777732,
+          "origin": [
+            -0.15,
+            -0.15,
+            -0.15
+          ],
+          "grid_shape": [
+            56,
+            56,
+            56
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 10454735,
+          "vertex_count": 30002,
+          "triangle_count": 60000,
+          "backend": "dense_cuda",
+          "boundary_mode": "full",
+          "timings_ms": {
+            "prepare": 0.024266,
+            "upload": 0.7488,
+            "field": 4.007575,
+            "extraction": 3.641625,
+            "download": 2.857075
+          }
+        },
+        {
+          "total_ms": 11.969858984230086,
+          "origin": [
+            -0.15,
+            -0.15,
+            -0.15
+          ],
+          "grid_shape": [
+            56,
+            56,
+            56
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 10454735,
+          "vertex_count": 30002,
+          "triangle_count": 60000,
+          "backend": "dense_cuda",
+          "boundary_mode": "full",
+          "timings_ms": {
+            "prepare": 0.017875,
+            "upload": 0.656609,
+            "field": 4.072033,
+            "extraction": 3.728617,
+            "download": 1.751858
+          }
+        },
+        {
+          "total_ms": 11.304042011033744,
+          "origin": [
+            -0.15,
+            -0.15,
+            -0.15
+          ],
+          "grid_shape": [
+            56,
+            56,
+            56
+          ],
+          "voxel_size": 0.06,
+          "device": 0,
+          "peak_device_bytes": 10454735,
+          "vertex_count": 30002,
+          "triangle_count": 60000,
+          "backend": "dense_cuda",
+          "boundary_mode": "full",
+          "timings_ms": {
+            "prepare": 0.016792,
+            "upload": 0.828534,
+            "field": 3.316733,
+            "extraction": 3.3735,
+            "download": 1.815342
+          }
+        }
+      ]
+    }
+  ],
+  "gpu": "NVIDIA GeForce RTX 4060, 595.97, 8188 MiB"
+}

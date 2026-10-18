@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Linux-only M0 acceptance check. Mount changes exist only in a private namespace.
+# Linux-only wheel acceptance check. Mount changes exist only in a private namespace.
 set -euo pipefail
 if [[ $# -ne 1 ]]; then
     echo "usage: $0 /absolute/path/to/clean-venv/bin/python" >&2

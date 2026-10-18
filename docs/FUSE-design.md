@@ -8,6 +8,10 @@ Subsequent distribution requirements and their implementation status are recorde
 in [distribution-requirements.md](distribution-requirements.md), including the
 CPython 3.9–3.14 target, GitHub wheel builds, and plain `pip install fusemesh`.
 
+M1 implementation choices and validation are recorded in
+[decision 0002](decisions/0002-m1-dense-baseline.md) and
+[M1 validation](m1-validation.md).
+
 FUSE will reconstruct a surface mesh approximating the union of multiple potentially overlapping solids. The implementation will use C++ and CUDA, with NanoVDB as an internal dependency, and expose a Python API distributed as binary wheels on PyPI. This document records the agreed direction, proposed implementation defaults, correctness constraints, and development milestones for implementation agents.
 
 No implementation or benchmark results are implied by this design. Performance targets and final supported platforms must be established using representative workloads.
