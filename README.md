@@ -1,8 +1,9 @@
 # FUSE — Fast Union Surface Extraction
 
 C++/CUDA reconstruction of the full boundary of a union of closed triangle
-meshes, with a NumPy-facing Python API. **M1 is implemented:** a bounded dense
-GPU baseline. Sparse NanoVDB reconstruction and public PyPI wheels are upcoming.
+meshes, with a NumPy-facing Python API. **M2 is implemented:** sparse NanoVDB
+candidate topology with CUDA field evaluation and indexed extraction. The M1
+dense backend remains available for comparison; public PyPI wheels are upcoming.
 
 ## Reconstruct a union
 
@@ -13,6 +14,7 @@ result = fusemesh.reconstruct(
     meshes=[(vertices_a, faces_a), (vertices_b, faces_b)],
     voxel_size=0.05,  # world units
     device=0,
+    backend="sparse",  # default; "dense" selects the M1 reference
     max_memory_bytes=512 * 1024**2,
 )
 vertices = result.vertices  # float64 (N, 3), world coordinates
@@ -34,7 +36,8 @@ Degenerate contacts and unresolved cell-interior topology are not guaranteed
 manifold. See the [M1 numerical and extraction policy](docs/decisions/0002-m1-dense-baseline.md).
 
 The memory limit covers FUSE device buffers, including scratch and output, but
-not CUDA context memory or host arrays. A scene that exceeds the limit raises
+not CUDA context memory or host arrays. Sparse candidate topology is currently
+built on the CPU; field queries and extraction run on the GPU. A scene that exceeds the limit raises
 `fusemesh.ResourceError` (a `MemoryError`). Increase voxel spacing or the budget.
 Calls are synchronous and release the GIL during native computation. Empty
 input returns empty arrays without initializing CUDA.
@@ -42,7 +45,12 @@ input returns empty arrays without initializing CUDA.
 For diagnostics, `return_field=True` also returns a float64 dense union field
 in `(z,y,x)` order, in world-distance units. `metadata['origin']` is sample zero;
 `metadata['grid_shape']` is `(x,y,z)`. The result records counts, peak allocated
-device bytes, and stage timings. `build_info()` and `smoke_test()` remain
+device bytes, active sample/candidate counts, NanoVDB bytes, and stage timings.
+The diagnostic field queries absent samples explicitly, including deep interiors;
+absence in NanoVDB never means exterior. Its host array must separately fit
+`max_memory_bytes`, so omit `return_field` for large sparse domains.
+`backend="dense"` retains the M1 reference; both backends use the same sampling
+and extraction policy. See [M2 decisions](docs/decisions/0003-m2-sparse.md). `build_info()` and `smoke_test()` remain
 available for build and GPU diagnostics.
 
 ## Build and install
@@ -57,9 +65,15 @@ SM 89 has been executed. Other platforms/drivers are not yet validated.
 git submodule update --init --recursive
 python -m pip install build
 python -m build
-python -m pip install dist/*.whl
+python -m pip install --upgrade dist/fusemesh-0.0.1.dev1-*.whl
 python -c 'import fusemesh; print(fusemesh.build_info()); print(fusemesh.smoke_test())'
 ```
+
+When rebuilding without changing the version, use `--force-reinstall --no-deps`
+instead of `--upgrade`; pip does not compare wheel contents. Restart any Python
+process that has already loaded the extension.
+
+A runnable OBJ demo is available with `python examples/union_demo.py`.
 
 The intended public command is `pip install fusemesh`, without a CUDA extra.
 No package has been published yet. Local wheels statically link the CUDA runtime
@@ -89,7 +103,7 @@ The tests compare GPU fields with analytic solids and an independent NumPy
 solid-angle/distance reference. They check closure, winding, components, Euler
 characteristics, volume, surface error, resource limits, and sampling losses.
 Native tests exercise all cube sign cases and shared-face extraction. See
-[M1 validation](docs/m1-validation.md) and [M0 validation](docs/m0-validation.md).
+[M2 validation](docs/m2-validation.md), [M1 validation](docs/m1-validation.md), and [M0 validation](docs/m0-validation.md).
 
 See [the design](docs/FUSE-design.md),
 [distribution requirements](docs/distribution-requirements.md),

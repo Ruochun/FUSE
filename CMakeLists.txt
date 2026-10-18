@@ -37,7 +37,7 @@ endif()
 string(REPLACE ";" "," FUSE_ARCH_STRING "${FUSE_CUDA_ARCHITECTURES}")
 configure_file(cmake/build_config.h.in generated/fuse/build_config.h @ONLY)
 add_library(fuse STATIC src/cuda/smoke.cu src/core/reconstruct.cpp
-  src/geometry/scene.cpp src/cuda/reconstruct.cu)
+  src/geometry/scene.cpp src/volume/topology.cpp src/cuda/reconstruct.cu)
 add_library(FUSE::fuse ALIAS fuse)
 target_include_directories(fuse PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

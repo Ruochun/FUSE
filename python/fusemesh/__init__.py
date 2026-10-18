@@ -1,4 +1,4 @@
-"""Fast Union Surface Extraction: bounded dense CUDA baseline (M1)."""
+"""Fast Union Surface Extraction: sparse CUDA reconstruction (M2)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,7 +9,7 @@ import numpy as np
 
 from ._native import ResourceError, _reconstruct, build_info, smoke_test
 
-__version__ = "0.0.1.dev0"
+__version__ = "0.0.1.dev1"
 __all__ = ["reconstruct", "ReconstructionResult", "ResourceError", "build_info", "smoke_test"]
 
 
@@ -28,7 +28,7 @@ class ReconstructionResult:
 
 
 def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
-                validation="full", return_field=False):
+                validation="full", return_field=False, backend="sparse"):
     """Approximate the full boundary of the union of closed triangle meshes.
 
     ``meshes`` is an iterable of (vertices, faces) pairs. Vertices must be real
@@ -41,11 +41,16 @@ def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
     precondition still applies. No repair, smoothing, or cavity removal occurs.
 
     ``max_memory_bytes`` bounds FUSE-owned device buffers, excluding the CUDA
-    context and host copies/results. Dense sampling can be expensive: increase
-    voxel_size if ResourceError is raised. Subvoxel features may disappear.
-    ``return_field`` copies the sampled union field to the host for diagnostics.
+    context and host copies/results. Increase voxel_size if ResourceError is
+    raised. Subvoxel features may disappear. ``backend='sparse'`` uses NanoVDB
+    candidate topology; ``'dense'`` retains the M1 reference implementation.
+    ``return_field`` returns a dense diagnostic field, querying absent samples
+    explicitly. Its host array must separately fit max_memory_bytes; sparse
+    calls use bounded GPU chunks to fill it. Omit it for very large domains.
     Calls are synchronous. Empty input returns empty arrays without using CUDA.
     """
+    if backend not in ("sparse", "dense"):
+        raise ValueError("backend must be 'sparse' or 'dense'")
     if validation not in ("full", "basic"):
         raise ValueError("validation must be 'full' or 'basic'")
     if isinstance(device, (bool, np.bool_)):
@@ -77,4 +82,4 @@ def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
                           np.array(faces, dtype=np.uint64, order="C", copy=True)))
     return ReconstructionResult(**_reconstruct(
         snapshots, float(voxel_size), device, max_memory_bytes,
-        validation == "full", bool(return_field)))
+        validation == "full", bool(return_field), backend == "sparse"))

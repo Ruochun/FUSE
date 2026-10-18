@@ -11,6 +11,16 @@ from geometry_helpers import (box, combine, sphere, torus, box_sdf, sample_posit
                               reference_field, unsigned_distance, mesh_quality, surface_samples)
 
 
+@pytest.fixture(autouse=True, params=["dense", "sparse"])
+def reconstruction_backend(request, monkeypatch):
+    """Run the full analytic/reference/ownership suite on both implementations."""
+    original = fusemesh.reconstruct
+    def reconstruct(*args, **kwargs):
+        kwargs.setdefault("backend", request.param)
+        return original(*args, **kwargs)
+    monkeypatch.setattr(fusemesh, "reconstruct", reconstruct)
+
+
 @pytest.mark.gpu
 @pytest.mark.parametrize('bounds,components', [
     ([((0,0,0),(1,1,1))],1),
@@ -212,7 +222,7 @@ def test_structural_and_topology_errors():
         fusemesh.reconstruct([],1,device=-1)
     with pytest.raises(ValueError,match='max_memory_bytes'):
         fusemesh.reconstruct([],1,max_memory_bytes=0)
-    with pytest.raises(fusemesh.ResourceError,match='dense grid'):
+    with pytest.raises(fusemesh.ResourceError,match='grid'):
         fusemesh.reconstruct([box()],1e-8)
 
 

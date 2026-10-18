@@ -9,10 +9,10 @@
 namespace nb = nanobind;
 
 NB_MODULE(_native, m) {
-    m.doc() = "FUSE dense CUDA reconstruction backend";
+    m.doc() = "FUSE sparse CUDA reconstruction backend";
     nb::exception<fuse::ResourceError>(m, "ResourceError", PyExc_MemoryError);
     m.def("_reconstruct", [](nb::list meshes, double voxel_size, int device,
-                             std::uint64_t memory, bool topology, bool field) {
+                             std::uint64_t memory, bool topology, bool field, bool sparse) {
         using Vertices = nb::ndarray<nb::numpy, const double, nb::shape<-1,3>, nb::c_contig, nb::device::cpu>;
         using Faces = nb::ndarray<nb::numpy, const std::uint64_t, nb::shape<-1,3>, nb::c_contig, nb::device::cpu>;
         std::vector<fuse::MeshView> views;
@@ -24,7 +24,7 @@ NB_MODULE(_native, m) {
             auto f = nb::cast<Faces>(pair[1], false);
             views.push_back({v.data(), v.shape(0), f.data(), f.shape(0)});
         }
-        fuse::ReconstructionOptions options{voxel_size,device,memory,topology,field};
+        fuse::ReconstructionOptions options{voxel_size,device,memory,topology,field,sparse};
         std::unique_ptr<fuse::ReconstructionResult> result;
         {
             nb::gil_scoped_release release;
@@ -52,7 +52,12 @@ NB_MODULE(_native, m) {
         info["peak_device_bytes"] = storage->peak_device_bytes;
         info["vertex_count"] = storage->vertices.size()/3;
         info["triangle_count"] = storage->faces.size()/3;
-        info["backend"] = "dense_cuda";
+        info["backend"] = sparse ? "sparse_cuda" : "dense_cuda";
+        info["candidate_blocks"] = storage->candidate_blocks;
+        info["active_samples"] = storage->active_samples;
+        info["candidate_cells"] = storage->candidate_cells;
+        info["topology_bytes"] = storage->topology_bytes;
+        timings["topology"] = storage->topology_ms;
         info["boundary_mode"] = "full";
         timings["prepare"] = storage->prepare_ms;
         timings["upload"] = storage->upload_ms;
@@ -63,7 +68,7 @@ NB_MODULE(_native, m) {
         output["metadata"] = info;
         return output;
     }, nb::arg("meshes"), nb::arg("voxel_size"), nb::arg("device"),
-       nb::arg("max_memory_bytes"), nb::arg("validate_topology"), nb::arg("return_field"));
+       nb::arg("max_memory_bytes"), nb::arg("validate_topology"), nb::arg("return_field"), nb::arg("sparse"));
     m.def("smoke_test", [](int device) {
         std::unique_ptr<std::vector<float>> values;
         {
@@ -84,7 +89,7 @@ NB_MODULE(_native, m) {
         info["cuda_version"] = fuse::cuda_build_version();
         info["cuda_architectures"] = fuse::cuda_architectures();
         info["cuda_runtime"] = "static";
-        info["milestone"] = 1;
+        info["milestone"] = 2;
         return info;
     });
 }

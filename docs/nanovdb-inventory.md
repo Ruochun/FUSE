@@ -4,13 +4,16 @@ Inspected source: OpenVDB v13.1.0,
 `e26f5a569201d3236e0c30580572101022d3d754`.
 Paths below are relative to `external/openvdb/nanovdb/nanovdb/`.
 
-Only host grid construction and device access are runtime-validated by M0.
+M0 runtime-validates host float-grid construction and device access. M2 also
+uses host-built uint64 sample-index topology with CUDA lookup; see
+[decision 0003](decisions/0003-m2-sparse.md).
 Other entries are source-inspected candidates; availability is not evidence of
 FUSE semantic correctness or performance. Validate each before production use.
 
 | Capability | Pinned API / evidence | Implication |
 | --- | --- | --- |
 | Float grids | `tools::build::Grid<float>`, `tools::createNanoGrid<Grid, float>`, `NanoGrid<float>::getAccessor()` | Used by M0 for host construction and CUDA readback. |
+| M2 sample lookup | `tools::build::Grid<uint64_t>`, `tools::createNanoGrid<Grid, uint64_t>`, `NanoGrid<uint64_t>::tree().getValue()` | Runtime-tested host construction and CUDA compact sample-index lookup; background is absent topology, not field sign. |
 | Index topology | `tools/cuda/TopologyBuilder.cuh`: `TopologyBuilder<BuildT, ResourceT>(cudaStream_t, ResourceT&)` | `BuildTraits<BuildT>::is_onindex` is required. Staged mask/node construction, not arbitrary sparse insertion. |
 | Mesh rasterization | `tools/cuda/MeshToGrid.cuh`: `MeshToGrid<BuildT>(const Vec3f*, uint32_t, const Vec3i*, uint32_t, Map, cudaStream_t, ResourceT&)`; `getHandle()`, `getHandleAndUDF()` | Device vertex/index arrays; optional UDF sidecar, no sign classifier. `setNarrowBandWidth()` takes cell units. |
 | Topology merge | `tools/cuda/MergeGrids.cuh`: `MergeGrids<BuildT>(const std::vector<const NanoGrid<BuildT>*>&, cudaStream_t, ResourceT&)`, binary overload, `getHandle()` | Active-mask union of index grids, not scalar Boolean union. |

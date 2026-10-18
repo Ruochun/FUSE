@@ -1,5 +1,8 @@
 #include "geometry/queries.cuh"
 #include "meshing/cell.h"
+#include "volume/topology.h"
+#include <nanovdb/NanoVDB.h>
+#include <type_traits>
 #include <cuda_runtime.h>
 #include <cub/device/device_scan.cuh>
 #include <chrono>
@@ -53,9 +56,22 @@ struct Grid {
     __device__ Vec point(std::uint64_t i) const { return {double(i%nx),double(i/nx%ny),double(i/(std::uint64_t(nx)*ny))}; }
     __device__ Vec cell_point(std::uint64_t i) const { return {double(i%(nx-1)),double(i/(nx-1)%(ny-1)),double(i/(std::uint64_t(nx-1)*(ny-1)))}; }
 };
+struct SparseGrid : Grid {
+    const nanovdb::NanoGrid<std::uint64_t>* topology = nullptr;
+    const std::uint64_t* sample_keys = nullptr;
+    const std::uint64_t* cell_keys = nullptr;
+    std::uint64_t sample_count = 0, cell_count = 0;
+    __host__ __device__ std::uint64_t samples() const { return sample_count; }
+    __host__ __device__ std::uint64_t cells() const { return cell_count; }
+    __device__ std::uint64_t index(int x,int y,int z) const {
+        return topology->tree().getValue(nanovdb::Coord(x,y,z))-1;
+    }
+    __device__ Vec point(std::uint64_t i) const { return Grid::point(sample_keys[i]); }
+    __device__ Vec cell_point(std::uint64_t i) const { return Grid::point(cell_keys[i]); }
+};
 __device__ std::uint64_t thread_index() { return std::uint64_t(blockIdx.x)*blockDim.x+threadIdx.x; }
-__global__ void evaluate(Grid grid,const Triangle* tris,const Node* nodes,const Shape* shapes,std::uint32_t shape_count,double* field) {
-    auto i=thread_index();if(i>=grid.samples()) return;
+template<class G> __global__ void evaluate(G grid,const Triangle* tris,const Node* nodes,const Shape* shapes,std::uint32_t shape_count,double* field, std::uint64_t offset=0, std::uint64_t count=UINT64_MAX) {
+    auto local=thread_index();auto i=local+offset;if(local>=count || i>=grid.samples()) return;
     Vec p=grid.point(i);double value=INFINITY;
     for(std::uint32_t s=0;s<shape_count;++s) {
         const Shape& shape=shapes[s];
@@ -65,44 +81,45 @@ __global__ void evaluate(Grid grid,const Triangle* tris,const Node* nodes,const 
     }
     // Exact/near-zero samples are exterior with a tiny positive symbolic offset.
     // Samples within the numerical zero threshold use the exterior convention.
-    field[i]=fabs(value)<=1e-12 ? 1e-7:value;
+    field[local]=fabs(value)<=1e-12 ? 1e-7:value;
 }
-__device__ Cell cell_at(Grid g,const double* field,Vec p) {
+template<class G> __device__ Cell cell_at(G g,const double* field,Vec p) {
     Cell c{};
     for(int i=0;i<8;++i) { Vec q=p+Cell::corner(i); c.values[i]=field[g.index(int(q.x),int(q.y),int(q.z))]; }
     c.build();return c;
 }
-__global__ void edge_counts(Grid g,const double* field,std::uint64_t* edges) {
+template<class G> __global__ void edge_counts(G g,const double* field,std::uint64_t* edges) {
     auto key=thread_index();if(key>=3*g.samples()) return;
     auto i=key/3;int axis=key%3;
     Vec p=g.point(i);bool valid=axis==0 ? p.x+1<g.nx : axis==1 ? p.y+1<g.ny : p.z+1<g.nz;
-    auto step=axis==0 ? 1ull : axis==1 ? std::uint64_t(g.nx):std::uint64_t(g.nx)*g.ny;
-    edges[key]=valid && ((field[i]<0)!=(field[i+step]<0));
+    auto next=valid ? g.index(int(p.x)+(axis==0),int(p.y)+(axis==1),int(p.z)+(axis==2)) : UINT64_MAX;
+    edges[key]=next!=UINT64_MAX && ((field[i]<0)!=(field[next]<0));
 }
-__global__ void cell_counts(Grid g,const double* field,std::uint64_t* centers,std::uint64_t* faces) {
+template<class G> __global__ void cell_counts(G g,const double* field,std::uint64_t* centers,std::uint64_t* faces) {
     auto i=thread_index();if(i>=g.cells()) return;
     Cell c=cell_at(g,field,g.cell_point(i));unsigned seen=0;int edges[12];
     std::uint64_t loops=0,triangles=0;
     for(int e=0;e<12;++e) if(c.degree[e] && !(seen&(1u<<e))) { triangles+=c.loop(e,edges,seen);++loops; }
     centers[i]=loops;faces[i]=triangles;
 }
-__global__ void emit_edges(Grid g,const double* field,const std::uint64_t* prefix,Vec* vertices) {
+template<class G> __global__ void emit_edges(G g,const double* field,const std::uint64_t* prefix,Vec* vertices) {
     auto key=thread_index();if(key>=3*g.samples()) return;
     auto count=prefix[key];if(count==(key?prefix[key-1]:0)) return;
     auto i=key/3;int axis=key%3;
-    auto step=axis==0 ? 1ull : axis==1 ? std::uint64_t(g.nx):std::uint64_t(g.nx)*g.ny;
-    double t=field[i]/(field[i]-field[i+step]);Vec p=g.point(i);
+    Vec p=g.point(i);
+    auto next=g.index(int(p.x)+(axis==0),int(p.y)+(axis==1),int(p.z)+(axis==2));
+    double t=field[i]/(field[i]-field[next]);
     if(axis==0) p.x+=t;else if(axis==1) p.y+=t;else p.z+=t;
     vertices[count-1]=p;
 }
-__device__ std::uint64_t edge_id(Grid g,Vec cell,int e,const std::uint64_t* edges) {
+template<class G> __device__ std::uint64_t edge_id(G g,Vec cell,int e,const std::uint64_t* edges) {
     int a,b;Cell::endpoints(e,a,b);Vec p=Cell::corner(a),q=Cell::corner(b);
     int axis=p.x!=q.x ? 0:p.y!=q.y ? 1:2;
     Vec lo{minval(p.x,q.x)+cell.x,minval(p.y,q.y)+cell.y,minval(p.z,q.z)+cell.z};
     auto key=3*g.index(int(lo.x),int(lo.y),int(lo.z))+axis;
     return edges[key]-1;
 }
-__global__ void emit_cells(Grid g,const double* field,const std::uint64_t* edge_prefix,
+template<class G> __global__ void emit_cells(G g,const double* field,const std::uint64_t* edge_prefix,
                            const std::uint64_t* center_prefix,const std::uint64_t* face_prefix,
                            std::uint64_t edge_count,Vec* vertices,std::uint64_t* faces) {
     auto i=thread_index();if(i>=g.cells()) return;
@@ -130,26 +147,44 @@ __global__ void emit_cells(Grid g,const double* field,const std::uint64_t* edge_
 unsigned blocks(std::uint64_t n) { return static_cast<unsigned>((n+255)/256); }
 void launch_check() { check(cudaGetLastError(),"launch reconstruction kernel"); }
 } // namespace
-ReconstructionResult run_cuda(const Scene& scene,const ReconstructionOptions& options,
-                              const std::vector<double>* sampled_field) {
+template<class G> ReconstructionResult run_grid(const Scene& scene,const ReconstructionOptions& options,
+                              G grid, const SparseTopology* topology, const std::vector<double>* sampled_field) {
     Device device(options.device);
     Budget budget{options.max_memory_bytes};
-    Grid grid{scene.dimensions[0],scene.dimensions[1],scene.dimensions[2]};
     ReconstructionResult out;
+    out.active_samples=grid.samples();out.candidate_cells=grid.cells();
+    if(topology) { out.candidate_blocks=topology->blocks;out.topology_bytes=topology->grid.size(); }
     auto start=Clock::now();
     Buffer tris(budget,scene.triangles.size()*sizeof(Triangle)),nodes(budget,scene.nodes.size()*sizeof(Node)),
            shapes(budget,scene.shapes.size()*sizeof(Shape)),field(budget,grid.samples()*sizeof(double));
+    Buffer nano(budget,topology?topology->grid.size():0),
+           sample_keys(budget,topology?topology->samples.size()*8:0),
+           cell_keys(budget,topology?topology->cells.size()*8:0);
     // All host copies stay alive until the stream has synchronized.
     Stream stream;
+    if constexpr(std::is_same_v<G,SparseGrid>) {
+        check(cudaMemcpyAsync(nano.data,topology->grid.data(),nano.size,cudaMemcpyHostToDevice,stream.value),"upload NanoVDB topology");
+        check(cudaMemcpyAsync(sample_keys.data,topology->samples.data(),sample_keys.size,cudaMemcpyHostToDevice,stream.value),"upload sample keys");
+        check(cudaMemcpyAsync(cell_keys.data,topology->cells.data(),cell_keys.size,cudaMemcpyHostToDevice,stream.value),"upload cell keys");
+        grid.topology=nano.as<nanovdb::NanoGrid<std::uint64_t>>();
+        grid.sample_keys=sample_keys.as<std::uint64_t>();grid.cell_keys=cell_keys.as<std::uint64_t>();
+    }
     check(cudaMemcpyAsync(tris.data,scene.triangles.data(),tris.size,cudaMemcpyHostToDevice,stream.value),"upload triangles");
     check(cudaMemcpyAsync(nodes.data,scene.nodes.data(),nodes.size,cudaMemcpyHostToDevice,stream.value),"upload BVH");
     check(cudaMemcpyAsync(shapes.data,scene.shapes.data(),shapes.size,cudaMemcpyHostToDevice,stream.value),"upload shapes");
     stream.sync();out.upload_ms=ms(start);start=Clock::now();
     if(sampled_field) {
-        if(sampled_field->size()!=grid.samples()) throw std::invalid_argument("sampled field shape mismatch");
+        if(sampled_field->size()!=Grid{grid.nx,grid.ny,grid.nz}.samples()) throw std::invalid_argument("sampled field shape mismatch");
         for(double v:*sampled_field) if(!std::isfinite(v) || v==0)
             throw std::invalid_argument("internal extraction test requires finite nonzero samples");
-        check(cudaMemcpyAsync(field.data,sampled_field->data(),field.size,cudaMemcpyHostToDevice,stream.value),"upload validation field");
+        if constexpr(std::is_same_v<G,SparseGrid>) {
+            std::vector<double> active(grid.samples());
+            for(std::size_t i=0;i<active.size();++i) active[i]=(*sampled_field)[topology->samples[i]];
+            check(cudaMemcpyAsync(field.data,active.data(),field.size,cudaMemcpyHostToDevice,stream.value),"upload sparse validation field");
+            stream.sync(); // active owns the source storage
+        } else {
+            check(cudaMemcpyAsync(field.data,sampled_field->data(),field.size,cudaMemcpyHostToDevice,stream.value),"upload validation field");
+        }
     } else {
         evaluate<<<blocks(grid.samples()),256,0,stream.value>>>(grid,tris.as<Triangle>(),nodes.as<Node>(),shapes.as<Shape>(),scene.shapes.size(),field.as<double>());
         launch_check();
@@ -191,8 +226,30 @@ ReconstructionResult run_cuda(const Scene& scene,const ReconstructionOptions& op
     if(vertices.size) check(cudaMemcpy(out.vertices.data(),vertices.data,vertices.size,cudaMemcpyDeviceToHost),"download vertices");
     if(triangles.size) check(cudaMemcpy(out.faces.data(),triangles.data,triangles.size,cudaMemcpyDeviceToHost),"download faces");
     if(options.return_field) {
-        out.field.resize(grid.samples());
-        check(cudaMemcpy(out.field.data(),field.data,field.size,cudaMemcpyDeviceToHost),"download diagnostic field");
+        if constexpr(std::is_same_v<G,SparseGrid>) {
+            Grid dense{grid.nx,grid.ny,grid.nz};
+            out.field.resize(dense.samples());
+            // Diagnostics are explicitly dense, but never require a dense GPU
+            // allocation. Missing topology is queried, never filled as exterior.
+            auto chunk=std::min<std::uint64_t>(65536,(budget.limit-budget.live)/8);
+            if(!chunk) throw ResourceError("diagnostic scratch exceeds max_memory_bytes");
+            Buffer diagnostic(budget,chunk*8);
+            for(std::uint64_t offset=0;offset<dense.samples();offset+=chunk) {
+                auto n=std::min(chunk,dense.samples()-offset);
+                evaluate<<<blocks(n),256,0,stream.value>>>(dense,tris.as<Triangle>(),nodes.as<Node>(),shapes.as<Shape>(),scene.shapes.size(),diagnostic.as<double>(),offset,n);
+                launch_check();
+                check(cudaMemcpyAsync(out.field.data()+offset,diagnostic.data,n*8,cudaMemcpyDeviceToHost,stream.value),"download diagnostic chunk");
+                stream.sync();
+            }
+            // Report the actual values consumed by sparse extraction at its
+            // active samples, so dense/sparse field comparisons test that path.
+            std::vector<double> active(grid.samples());
+            check(cudaMemcpy(active.data(),field.data,field.size,cudaMemcpyDeviceToHost),"download sparse field");
+            for(std::size_t i=0;i<active.size();++i) out.field[topology->samples[i]]=active[i];
+        } else {
+            out.field.resize(grid.samples());
+            check(cudaMemcpy(out.field.data(),field.data,field.size,cudaMemcpyDeviceToHost),"download diagnostic field");
+        }
         for(auto& f:out.field) f*=options.voxel_size;
     }
     for(std::size_t i=0;i<out.vertices.size();++i)
@@ -215,5 +272,22 @@ ReconstructionResult run_cuda(const Scene& scene,const ReconstructionOptions& op
     }
     out.download_ms=ms(start);out.peak_device_bytes=budget.peak;
     return out;
+}
+ReconstructionResult run_cuda(const Scene& scene,const ReconstructionOptions& options,
+                              const std::vector<double>* sampled_field) {
+    Grid dense{scene.dimensions[0],scene.dimensions[1],scene.dimensions[2]};
+    if(options.return_field && dense.samples()>options.max_memory_bytes/sizeof(double))
+        throw ResourceError("dense diagnostic field exceeds max_memory_bytes; disable return_field or increase the budget");
+    if(!options.sparse) return run_grid(scene,options,dense,nullptr,sampled_field);
+    // Validate CUDA availability before potentially expensive host topology work.
+    Device device(options.device);
+    auto start=Clock::now();
+    auto topology=make_topology(scene,options);
+    double elapsed=ms(start);
+    SparseGrid sparse; sparse.nx=dense.nx;sparse.ny=dense.ny;sparse.nz=dense.nz;
+    sparse.sample_count=topology.samples.size();sparse.cell_count=topology.cells.size();
+    auto result=run_grid(scene,options,sparse,&topology,sampled_field);
+    result.topology_ms=elapsed;
+    return result;
 }
 } // namespace fuse::detail

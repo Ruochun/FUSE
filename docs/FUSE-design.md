@@ -10,7 +10,9 @@ CPython 3.9–3.14 target, GitHub wheel builds, and plain `pip install fusemesh`
 
 M1 implementation choices and validation are recorded in
 [decision 0002](decisions/0002-m1-dense-baseline.md) and
-[M1 validation](m1-validation.md).
+[M1 validation](m1-validation.md). M2 sparse implementation choices and evidence
+are in [decision 0003](decisions/0003-m2-sparse.md) and
+[M2 validation](m2-validation.md).
 
 FUSE will reconstruct a surface mesh approximating the union of multiple potentially overlapping solids. The implementation will use C++ and CUDA, with NanoVDB as an internal dependency, and expose a Python API distributed as binary wheels on PyPI. This document records the agreed direction, proposed implementation defaults, correctness constraints, and development milestones for implementation agents.
 

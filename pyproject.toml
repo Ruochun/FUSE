@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fusemesh"
-version = "0.0.1.dev0"
+version = "0.0.1.dev1"
 description = "Fast Union Surface Extraction — CUDA/NanoVDB backend"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -19,7 +19,7 @@ test = ["pytest>=8"]
 cmake.version = ">=3.24"
 wheel.packages = ["python/fusemesh"]
 build-dir = "build/{wheel_tag}"
-sdist.include = ["external/openvdb/nanovdb/**", "external/openvdb/LICENSE", "external/openvdb/NOTICE", "cmake/**", "include/**", "src/**", "bindings/**", "tests/**", "docs/**", "licenses/**"]
+sdist.include = ["external/openvdb/nanovdb/**", "external/openvdb/LICENSE", "external/openvdb/NOTICE", "cmake/**", "include/**", "src/**", "bindings/**", "tests/**", "benchmarks/**", "examples/**", "docs/**", "licenses/**"]
 sdist.exclude = [".venv*/**", "dist/**", "build/**", "external/openvdb/**"]
 
 [tool.pytest.ini_options]

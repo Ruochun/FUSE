@@ -89,7 +89,7 @@ Scene prepare(const std::vector<MeshView>& meshes, const ReconstructionOptions& 
             if (m.vertex_count>SIZE_MAX/3 || m.face_count>SIZE_MAX/3)
                 throw ResourceError("mesh index arithmetic exceeds address range");
             if (m.face_count>UINT32_MAX/2 || triangles+m.face_count>UINT32_MAX/2)
-                throw ResourceError("too many triangles for the M1 BVH");
+                throw ResourceError("too many triangles for the BVH");
             triangles+=m.face_count;
             for (std::size_t i=0;i<m.vertex_count*3;++i)
                 if (!std::isfinite(m.vertices[i])) throw std::invalid_argument("vertices must be finite");
@@ -115,18 +115,18 @@ Scene prepare(const std::vector<MeshView>& meshes, const ReconstructionOptions& 
     for (int a=0;a<3;++a) {
         const double span=(world.hi[a]-world.lo[a])/options.voxel_size;
         const double count=std::ceil(span)+6;
-        if (!std::isfinite(count) || count>INT32_MAX/3 || count<2)
-            throw ResourceError("dense grid dimensions exceed M1 indexing limits; increase voxel_size");
+        if (!std::isfinite(count) || count>INT32_MAX-16 || count<2)
+            throw ResourceError("grid dimensions exceed coordinate limits; increase voxel_size");
         s.dimensions[a]=static_cast<std::uint32_t>(count);
-        if (samples>static_cast<std::uint64_t>(INT32_MAX/3)/s.dimensions[a])
-            throw ResourceError("dense grid sample count exceeds M1 indexing limits; increase voxel_size");
+        if (samples>(options.sparse ? UINT64_MAX/3 : std::uint64_t(INT32_MAX/3))/s.dimensions[a])
+            throw ResourceError("grid sample count exceeds indexing limits; increase voxel_size");
         samples*=s.dimensions[a];
         s.origin[a]=world.lo[a]-2.5*options.voxel_size;
         if (!std::isfinite(s.origin[a]) || s.origin[a]+options.voxel_size==s.origin[a])
             throw std::invalid_argument("voxel_size cannot be represented at this world coordinate magnitude");
     }
     // Preflight before building/uploading BVHs; actual allocations are budgeted too.
-    if (samples>options.max_memory_bytes/48)
+    if (!options.sparse && samples>options.max_memory_bytes/48)
         throw ResourceError("dense grid exceeds max_memory_bytes; increase voxel_size or the memory budget");
     s.triangles.reserve(triangles);
     for (const auto& m:meshes) {

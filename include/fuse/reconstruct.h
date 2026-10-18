@@ -18,6 +18,7 @@ struct ReconstructionOptions {
     std::uint64_t max_memory_bytes = 512ull * 1024 * 1024;
     bool validate_topology = true;
     bool return_field = false;
+    bool sparse = true; // false retains the M1 dense reference backend
 };
 class ResourceError : public std::runtime_error {
 public:
@@ -32,6 +33,8 @@ struct ReconstructionResult {
     double voxel_size = 0;
     int device = 0;
     std::uint64_t peak_device_bytes = 0; // FUSE allocations, excluding CUDA context
+    std::uint64_t candidate_blocks = 0, active_samples = 0, candidate_cells = 0, topology_bytes = 0;
+    double topology_ms = 0;
     double prepare_ms = 0, upload_ms = 0, field_ms = 0, extraction_ms = 0, download_ms = 0;
 };
 // Synchronous. Inputs remain valid and unchanged until return. No Python or

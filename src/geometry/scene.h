@@ -54,7 +54,8 @@ struct Scene {
 };
 Scene prepare(const std::vector<MeshView>& meshes, const ReconstructionOptions& options);
 // The optional field is an internal validation seam for testing extraction
-// independently of mesh queries; it is not exposed by the public API.
+// independently of mesh queries; it is not exposed by the public API. Sparse
+// tests must provide triangles covering the supplied field's crossing cells.
 ReconstructionResult run_cuda(const Scene& scene, const ReconstructionOptions& options,
                               const std::vector<double>* sampled_field = nullptr);
 } // namespace fuse::detail

@@ -29,7 +29,7 @@ def main():
         runs=[]
         for _ in range(4):
             start=time.perf_counter()
-            result=fusemesh.reconstruct(meshes,h)
+            result=fusemesh.reconstruct(meshes,h,backend="dense")
             runs.append({'total_ms':(time.perf_counter()-start)*1000, **result.metadata})
         report['workloads'].append({'name':name,'shape_count':len(meshes),
              'input_triangles':sum(len(f) for _,f in meshes),'voxel_size':h,
