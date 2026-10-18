@@ -1,0 +1,27 @@
+[build-system]
+requires = ["scikit-build-core>=0.11,<0.12", "nanobind>=2.9,<3"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "fusemesh"
+version = "0.0.1.dev0"
+description = "Fast Union Surface Extraction — CUDA/NanoVDB backend"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "BSD-3-Clause"
+license-files = ["LICENSE", "licenses/*"]
+dependencies = ["numpy>=1.23"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.scikit-build]
+cmake.version = ">=3.24"
+wheel.packages = ["python/fusemesh"]
+build-dir = "build/{wheel_tag}"
+sdist.include = ["external/openvdb/nanovdb/**", "external/openvdb/LICENSE", "external/openvdb/NOTICE", "cmake/**", "include/**", "src/**", "bindings/**", "tests/**", "docs/**", "licenses/**"]
+sdist.exclude = [".venv*/**", "dist/**", "build/**", "external/openvdb/**"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["gpu: requires an NVIDIA GPU and driver"]

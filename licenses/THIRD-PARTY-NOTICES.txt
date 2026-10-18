@@ -1,0 +1,13 @@
+NanoVDB / OpenVDB v13.1.0
+Copyright Contributors to the OpenVDB Project
+Apache License 2.0; see NanoVDB-Apache-2.0.txt.
+Pinned source: https://github.com/AcademySoftwareFoundation/openvdb/tree/e26f5a569201d3236e0c30580572101022d3d754
+No upstream source modifications. No upstream root NOTICE file is present.
+
+NVIDIA CUDA runtime 12.8 (statically linked)
+Copyright NVIDIA Corporation. All rights reserved.
+See CUDA-12.8-EULA.txt, including Attachment A's CUDA Runtime redistributables.
+The NVIDIA driver is not included. CUDA components are not under FUSE's BSD license.
+
+Nanobind and its bundled robin_map: see nanobind-LICENSE.txt and
+robin-map-LICENSE.txt. These notices accompany the compiled Python binding.
