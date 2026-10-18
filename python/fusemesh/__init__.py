@@ -7,10 +7,13 @@ from typing import Optional
 
 import numpy as np
 
+from .io import load_mesh, load_meshes, save_mesh, _is_source
+
 from ._native import ResourceError, _reconstruct, build_info, smoke_test
 
-__version__ = "0.0.1.dev1"
-__all__ = ["reconstruct", "ReconstructionResult", "ResourceError", "build_info", "smoke_test"]
+__version__ = "0.0.1.dev2"
+__all__ = ["reconstruct", "ReconstructionResult", "ResourceError", "build_info", "smoke_test",
+           "load_mesh", "load_meshes", "save_mesh"]
 
 
 @dataclass
@@ -31,7 +34,10 @@ def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
                 validation="full", return_field=False, backend="sparse"):
     """Approximate the full boundary of the union of closed triangle meshes.
 
-    ``meshes`` is an iterable of (vertices, faces) pairs. Vertices must be real
+    ``meshes`` accepts local file paths, Trimesh/Scene objects, or an iterable
+    mixing these with (vertices, faces) pairs. Files are loaded using Trimesh
+    without automatic repair. Scene instances are separate solids; disconnected
+    shells within each geometry stay together. Vertices must be real
     numeric (N,3) arrays; faces must be integer (M,3) arrays. Inputs are copied
     to contiguous float64/uint64 snapshots before the GIL is released.
 
@@ -61,8 +67,16 @@ def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
     max_memory_bytes = operator.index(max_memory_bytes)
     if max_memory_bytes <= 0:
         raise ValueError("max_memory_bytes must be positive")
+    if _is_source(meshes):
+        meshes = [meshes]
+    def expanded_inputs():
+        for mesh in meshes:
+            if _is_source(mesh):
+                yield from load_meshes(mesh)
+            else:
+                yield mesh
     snapshots = []
-    for i, mesh in enumerate(meshes):
+    for i, mesh in enumerate(expanded_inputs()):
         try:
             vertices, faces = mesh
         except (TypeError, ValueError) as error:

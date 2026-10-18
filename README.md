@@ -22,6 +22,24 @@ faces = result.faces        # uint64 (M, 3), indexed triangles
 print(result.metadata)
 ```
 
+Trimesh is installed automatically as the standard file-loading helper. You can
+pass a local path, a list of paths, Trimesh/Scene objects, or mix these with array
+pairs:
+
+```python
+result = fusemesh.reconstruct(["a.off", "b.off"], voxel_size=0.05)
+fusemesh.save_mesh("union.obj", result)
+
+# Explicit loading returns our existing (vertices, faces) array pairs:
+meshes = fusemesh.load_meshes(["a.off", "b.off"])
+result = fusemesh.reconstruct(meshes, voxel_size=0.05)
+```
+
+OFF faces must already be triangles. Loading preserves units and does not
+repair or weld meshes. Scene instances are separate union inputs with their
+world transforms applied; disconnected shells within one geometry remain
+one solid. See [mesh loading](docs/mesh-loading.md) for formats and limitations.
+
 Inputs are copied from real numeric vertex arrays and integer face arrays.
 The default `validation="full"` checks structural validity, closed edges,
 consistent face winding, and manifold vertex links. It does **not** detect
@@ -65,7 +83,7 @@ SM 89 has been executed. Other platforms/drivers are not yet validated.
 git submodule update --init --recursive
 python -m pip install build
 python -m build
-python -m pip install --upgrade dist/fusemesh-0.0.1.dev1-*.whl
+python -m pip install --upgrade dist/fusemesh-0.0.1.dev2-*.whl
 python -c 'import fusemesh; print(fusemesh.build_info()); print(fusemesh.smoke_test())'
 ```
 
@@ -74,6 +92,11 @@ instead of `--upgrade`; pip does not compare wheel contents. Restart any Python
 process that has already loaded the extension.
 
 A runnable OBJ demo is available with `python examples/union_demo.py`.
+For your own files:
+
+```sh
+python examples/fuse_files.py a.off b.off --voxel-size 0.05 --output build/union.obj
+```
 
 The intended public command is `pip install fusemesh`, without a CUDA extra.
 No package has been published yet. Local wheels statically link the CUDA runtime

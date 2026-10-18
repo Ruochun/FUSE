@@ -21,3 +21,10 @@ libcu++ / CUDA C++ Core Libraries headers (CUDA 12.8)
 Copyright NVIDIA CORPORATION & AFFILIATES and LLVM contributors.
 Apache-2.0 WITH LLVM-exception; see LLVM-Apache-2.0-exception.txt.
 License source referenced by the CUDA headers: https://llvm.org/LICENSE.txt
+
+Trimesh (Python runtime dependency)
+-----------------------------------
+Trimesh is installed separately through package dependencies, not vendored or
+statically linked into FUSE. It is distributed under the MIT license; its
+distribution includes the applicable copyright and license text.
+Project: https://github.com/mikedh/trimesh

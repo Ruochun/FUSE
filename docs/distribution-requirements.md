@@ -39,6 +39,16 @@ limits. M0 established diagnostics only. M1 now provides the dense reconstructio
 baseline; see [M1 validation](m1-validation.md). M2 adds default sparse NanoVDB
 reconstruction; see [M2 validation](m2-validation.md).
 
+## File-loading dependency
+
+Trimesh is now a standard Python runtime dependency, installed by ordinary
+`pip install fusemesh` (no I/O extra). The adapter currently requires
+`trimesh>=4.12.2,<5`; version 4.12.2 was tested on CPython 3.13 and declares
+Python >=3.8, so it does not itself rule out the future Python 3.9 target.
+The full Python matrix remains outstanding. No Trimesh soft extras or new
+native submodules are required for the tested OFF/OBJ/GLB path.
+See [mesh loading](mesh-loading.md).
+
 ## Work still required
 
 | Requirement | Outstanding implementation and acceptance evidence | Milestone |

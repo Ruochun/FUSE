@@ -4,13 +4,13 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fusemesh"
-version = "0.0.1.dev1"
+version = "0.0.1.dev2"
 description = "Fast Union Surface Extraction — CUDA/NanoVDB backend"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "BSD-3-Clause"
 license-files = ["LICENSE", "licenses/*"]
-dependencies = ["numpy>=1.23"]
+dependencies = ["numpy>=1.23", "trimesh>=4.12.2,<5"]
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
