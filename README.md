@@ -4,7 +4,9 @@ C++/CUDA reconstruction of the full boundary of a union of closed triangle
 meshes, with a NumPy-facing Python API. **M3 is implemented:** sparse NanoVDB
 reconstruction with optimized topology construction and BVH queries, documented
 API behavior, and repeatable performance checks. The dense backend remains a
-correctness reference; public PyPI wheels are upcoming.
+correctness reference. M4 release automation and formatting are configured;
+public PyPI wheels await release acceptance. See [release instructions](docs/releasing.md)
+and [M4 validation](docs/m4-validation.md).
 
 ## Reconstruct a union
 
@@ -74,10 +76,10 @@ available for build and GPU diagnostics.
 
 ## Build and install
 
-The current validation platform is Linux x86-64, CUDA toolkit 12.8, GCC 11,
-Python 3.13, and an RTX 4060. Metadata currently permits Python 3.10+; the
-intended release target is CPython 3.9–3.14. The initial conservative Linux
-driver floor is 570.26. Wheels compile SM 80/86/89/90 and compute-90 PTX; only
+Local validation covers CPython 3.9–3.14 on Linux x86-64, CUDA toolkit 12.8,
+GCC 11, and an RTX 4060; all six installed wheels pass the reconstruction suite.
+See [M4 validation](docs/m4-validation.md). The conservative Linux
+driver floor is 570.124.06. Wheels compile SM 80/86/89/90 and compute-90 PTX; only
 SM 89 has been executed. Other platforms/drivers are not yet validated.
 
 ```sh

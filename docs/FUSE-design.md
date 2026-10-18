@@ -388,7 +388,9 @@ Acceptance: representative workload benchmarks and regression thresholds are rec
 
 ### Milestone 4 Public wheel release
 
-Add the required platform matrix, runtime dependency handling, clean-install GPU tests, source archive verification, documentation, and release rehearsal.
+Add the required platform matrix, runtime dependency handling, clean-install GPU tests, source archive verification, documentation, and release rehearsal. Add authoritative formatting configuration and a project-wide formatter/check utility, and format all first-party code.
+
+Implementation and external release gates: [release instructions](releasing.md) and [M4 validation](m4-validation.md).
 
 Acceptance: users can install the supported wheel and run reconstruction without a compiler or CUDA toolkit.
 

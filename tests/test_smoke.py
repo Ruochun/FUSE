@@ -24,8 +24,14 @@ def test_negative_device():
 def test_no_visible_device():
     # Fresh process: CUDA_VISIBLE_DEVICES is consulted at initialization.
     result = subprocess.run(
-        [sys.executable, "-c", "import fusemesh; print(fusemesh.build_info()); fusemesh.smoke_test()"],
-        env={**os.environ, "CUDA_VISIBLE_DEVICES": ""}, capture_output=True, text=True,
+        [
+            sys.executable,
+            "-c",
+            "import fusemesh; print(fusemesh.build_info()); fusemesh.smoke_test()",
+        ],
+        env={**os.environ, "CUDA_VISIBLE_DEVICES": ""},
+        capture_output=True,
+        text=True,
     )
     assert result.returncode != 0
     assert "nanovdb_revision" in result.stdout  # import and metadata remain usable

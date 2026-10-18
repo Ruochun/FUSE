@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Like MoPhi's utility: clang-format + Black, with CMake and CI check support.
+set -euo pipefail
+repo_dir=$(cd "$(dirname "$0")" && pwd)
+exec "${PYTHON:-python3}" "$repo_dir/scripts/format_all.py" "$@"

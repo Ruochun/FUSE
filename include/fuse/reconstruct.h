@@ -7,9 +7,9 @@
 
 namespace fuse {
 struct MeshView {
-    const double* vertices = nullptr; // interleaved xyz, world coordinates
+    const double* vertices = nullptr;  // interleaved xyz, world coordinates
     std::size_t vertex_count = 0;
-    const std::uint64_t* faces = nullptr; // interleaved triangle indices
+    const std::uint64_t* faces = nullptr;  // interleaved triangle indices
     std::size_t face_count = 0;
 };
 struct ReconstructionOptions {
@@ -18,21 +18,21 @@ struct ReconstructionOptions {
     std::uint64_t max_memory_bytes = 512ull * 1024 * 1024;
     bool validate_topology = true;
     bool return_field = false;
-    bool sparse = true; // false retains the M1 dense reference backend
+    bool sparse = true;  // false retains the M1 dense reference backend
 };
 class ResourceError : public std::runtime_error {
-public:
+  public:
     using std::runtime_error::runtime_error;
 };
 struct ReconstructionResult {
-    std::vector<double> vertices; // xyz, world coordinates
-    std::vector<std::uint64_t> faces; // triangle indices
-    std::vector<double> field; // optional z,y,x samples, distances in world units
-    std::array<double, 3> origin{}; // world position of sample (0,0,0)
-    std::array<std::uint32_t, 3> grid_shape{}; // x,y,z sample counts
+    std::vector<double> vertices;               // xyz, world coordinates
+    std::vector<std::uint64_t> faces;           // triangle indices
+    std::vector<double> field;                  // optional z,y,x samples, distances in world units
+    std::array<double, 3> origin{};             // world position of sample (0,0,0)
+    std::array<std::uint32_t, 3> grid_shape{};  // x,y,z sample counts
     double voxel_size = 0;
     int device = 0;
-    std::uint64_t peak_device_bytes = 0; // FUSE allocations, excluding CUDA context
+    std::uint64_t peak_device_bytes = 0;  // FUSE allocations, excluding CUDA context
     std::uint64_t candidate_blocks = 0, active_samples = 0, candidate_cells = 0, topology_bytes = 0;
     double topology_ms = 0;
     double topology_candidates_ms = 0, topology_keys_ms = 0, topology_index_ms = 0;
@@ -40,6 +40,5 @@ struct ReconstructionResult {
 };
 // Synchronous. Inputs remain valid and unchanged until return. No Python or
 // upstream storage types cross this boundary. Empty scenes do not initialize CUDA.
-ReconstructionResult reconstruct(const std::vector<MeshView>& meshes,
-                                 const ReconstructionOptions& options = {});
-} // namespace fuse
+ReconstructionResult reconstruct(const std::vector<MeshView>& meshes, const ReconstructionOptions& options = {});
+}  // namespace fuse

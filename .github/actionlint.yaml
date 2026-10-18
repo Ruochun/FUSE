@@ -1,0 +1,7 @@
+self-hosted-runner:
+  labels:
+    - fuse-gpu
+    - sm80
+    - sm86
+    - sm89
+    - sm90

@@ -111,4 +111,5 @@ subvoxel/degenerate-contact limitations remain those documented in
 [M1 decisions](decisions/0002-m1-dense-baseline.md) and
 [M2 decisions](decisions/0003-m2-sparse.md). Version 0.2 does not add adaptive
 resolution, exact Booleans, mesh repair, or an error-bound API. Public PyPI
-publishing and the Python/platform compatibility matrix remain M4 work.
+publishing and full GPU/platform qualification require the M4 acceptance gates;
+see [release instructions](releasing.md) and [validation](m4-validation.md).

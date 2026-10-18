@@ -10,4 +10,4 @@ std::vector<float> smoke_test(int device = 0);
 const char* nanovdb_revision() noexcept;
 const char* cuda_architectures() noexcept;
 int cuda_build_version() noexcept;
-} // namespace fuse
+}  // namespace fuse

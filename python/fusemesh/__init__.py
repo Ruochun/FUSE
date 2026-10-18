@@ -1,4 +1,5 @@
 """Fast Union Surface Extraction: sparse CUDA reconstruction (M3)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,8 +13,16 @@ from .io import load_mesh, load_meshes, save_mesh, _is_source
 from ._native import ResourceError, _reconstruct, build_info, smoke_test
 
 __version__ = build_info()["version"]
-__all__ = ["reconstruct", "ReconstructionResult", "ResourceError", "build_info", "smoke_test",
-           "load_mesh", "load_meshes", "save_mesh"]
+__all__ = [
+    "reconstruct",
+    "ReconstructionResult",
+    "ResourceError",
+    "build_info",
+    "smoke_test",
+    "load_mesh",
+    "load_meshes",
+    "save_mesh",
+]
 
 
 @dataclass
@@ -24,14 +33,23 @@ class ReconstructionResult:
     are float64 in (z, y, x) order and world-distance units. Output arrays own
     their backing native storage through a capsule and outlive this container.
     """
+
     vertices: np.ndarray
     faces: np.ndarray
     metadata: dict
     field: Optional[np.ndarray] = None
 
 
-def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
-                validation="full", return_field=False, backend="sparse"):
+def reconstruct(
+    meshes,
+    voxel_size,
+    *,
+    device=0,
+    max_memory_bytes=512 * 1024**2,
+    validation="full",
+    return_field=False,
+    backend="sparse",
+):
     """Approximate the full boundary of the union of closed triangle meshes.
 
     ``meshes`` accepts local file paths, Trimesh/Scene objects, or an iterable
@@ -66,21 +84,23 @@ def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
     if isinstance(device, (bool, np.bool_)):
         raise TypeError("device must be an integer")
     device = operator.index(device)
-    if device < 0 or device > 2**31-1:
+    if device < 0 or device > 2**31 - 1:
         raise ValueError("device must be a nonnegative signed 32-bit integer")
     if isinstance(max_memory_bytes, (bool, np.bool_)):
         raise TypeError("max_memory_bytes must be an integer")
     max_memory_bytes = operator.index(max_memory_bytes)
-    if not 0 < max_memory_bytes <= 2**64-1:
+    if not 0 < max_memory_bytes <= 2**64 - 1:
         raise ValueError("max_memory_bytes must be positive and fit uint64")
     if _is_source(meshes):
         meshes = [meshes]
+
     def expanded_inputs():
         for mesh in meshes:
             if _is_source(mesh):
                 yield from load_meshes(mesh)
             else:
                 yield mesh
+
     snapshots = []
     for i, mesh in enumerate(expanded_inputs()):
         try:
@@ -98,8 +118,20 @@ def reconstruct(meshes, voxel_size, *, device=0, max_memory_bytes=512 * 1024**2,
             raise TypeError(f"mesh {i}: faces must have an integer dtype")
         if faces.dtype.kind == "i" and np.any(faces < 0):
             raise ValueError(f"mesh {i}: face indices must be nonnegative")
-        snapshots.append((np.array(vertices, dtype=np.float64, order="C", copy=True),
-                          np.array(faces, dtype=np.uint64, order="C", copy=True)))
-    return ReconstructionResult(**_reconstruct(
-        snapshots, float(voxel_size), device, max_memory_bytes,
-        validation == "full", bool(return_field), backend == "sparse"))
+        snapshots.append(
+            (
+                np.array(vertices, dtype=np.float64, order="C", copy=True),
+                np.array(faces, dtype=np.uint64, order="C", copy=True),
+            )
+        )
+    return ReconstructionResult(
+        **_reconstruct(
+            snapshots,
+            float(voxel_size),
+            device,
+            max_memory_bytes,
+            validation == "full",
+            bool(return_field),
+            backend == "sparse",
+        )
+    )

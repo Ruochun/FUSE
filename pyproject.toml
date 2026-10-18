@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core>=0.11,<0.12", "nanobind>=2.9,<3"]
+requires = ["scikit-build-core==0.11.6", "nanobind==2.15.0"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -7,10 +7,14 @@ name = "fusemesh"
 dynamic = ["version"]
 description = "Fast Union Surface Extraction — CUDA/NanoVDB backend"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = "BSD-3-Clause"
 license-files = ["LICENSE", "licenses/*"]
-dependencies = ["numpy>=1.23", "trimesh>=4.12.2,<5"]
+dependencies = [
+  "numpy>=1.23,<2.1; python_version < '3.10'",
+  "numpy>=1.23; python_version >= '3.10'",
+  "trimesh>=4.12.2,<5",
+]
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
@@ -19,7 +23,27 @@ test = ["pytest>=8"]
 cmake.version = ">=3.24"
 wheel.packages = ["python/fusemesh"]
 build-dir = "build/{wheel_tag}"
-sdist.include = ["VERSION", "external/openvdb/nanovdb/**", "external/openvdb/LICENSE", "external/openvdb/NOTICE", "cmake/**", "include/**", "src/**", "bindings/**", "tests/**", "benchmarks/**", "examples/**", "docs/**", "licenses/**"]
+sdist.include = [
+  "VERSION",
+  ".clang-format",
+  ".cmake-format.yaml",
+  ".format_all",
+  "scripts/**",
+  "requirements/**",
+  ".github/**",
+  "external/openvdb/nanovdb/**",
+  "external/openvdb/LICENSE",
+  "external/openvdb/NOTICE",
+  "cmake/**",
+  "include/**",
+  "src/**",
+  "bindings/**",
+  "tests/**",
+  "benchmarks/**",
+  "examples/**",
+  "docs/**",
+  "licenses/**",
+]
 sdist.exclude = [".venv*/**", "dist/**", "build/**", "external/openvdb/**"]
 
 [tool.scikit-build.metadata.version]
@@ -30,3 +54,20 @@ regex = '^(?P<value>[0-9]+\.[0-9]+\.[0-9]+)\s*$'
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["gpu: requires an NVIDIA GPU and driver"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.cibuildwheel]
+build = "cp39-manylinux_x86_64 cp310-manylinux_x86_64 cp311-manylinux_x86_64 cp312-manylinux_x86_64 cp313-manylinux_x86_64 cp314-manylinux_x86_64"
+build-frontend = "build"
+test-requires = ["pytest>=8,<9"]
+test-command = "python {project}/scripts/check_no_driver.py && python -m pytest {project}/tests -m 'not gpu' -q"
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64"]
+# Official manylinux CUDA image, 2026.10.15-1; update deliberately with validation.
+manylinux-x86_64-image = "quay.io/manylinux_cuda/manylinux_2_28_x86_64_cuda12_8@sha256:325c486d6c2164fe2623409d2b84f629bfe4ebcbeedc611f6712da81a7a9bc07"
+environment = { CUDACXX = "/usr/local/cuda/bin/nvcc", CMAKE_BUILD_PARALLEL_LEVEL = "2" }
+repair-wheel-command = "auditwheel repair --only-plat --plat manylinux_2_28_x86_64 -w {dest_dir} {wheel}"

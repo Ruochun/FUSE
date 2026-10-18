@@ -1,0 +1,159 @@
+name: Wheels and release
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Registry (requires protected environment and Trusted Publisher)
+        type: choice
+        options: [none, testpypi, pypi]
+        default: none
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements/format.txt
+      - run: ./.format_all --check
+      - run: actionlint
+      - run: shellcheck .format_all scripts/*.sh
+
+  source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements/release.txt
+      - run: python -m build --sdist
+      - run: python scripts/check_artifacts.py dist --source-only
+      - run: python -m twine check --strict dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  wheels:
+    needs: [source, format]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [cp39, cp310, cp311, cp312, cp313, cp314]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - run: python -m pip install -r requirements/release.txt
+      # Every wheel is compiled from the self-contained sdist, without Git/submodules.
+      - run: python -m cibuildwheel dist/*.tar.gz --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ matrix.python }}-manylinux_x86_64
+      - run: python scripts/check_artifacts.py wheelhouse --python-tag ${{ matrix.python }}
+      - run: python -m twine check --strict wheelhouse/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.python }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+
+  native:
+    needs: [source, format]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - name: Build standalone native tests from source archive
+        run: |
+          image=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["tool"]["cibuildwheel"]["linux"]["manylinux-x86_64-image"])')
+          mkdir -p build/native-tests
+          docker run --rm -v "$PWD:/project" -w /project "$image" bash -c 'bash scripts/ci_native_build.sh dist/*.tar.gz build/native-tests'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-tests
+          path: build/native-tests/*
+          if-no-files-found: error
+
+  gpu:
+    # Never execute pull-request code on a persistent GPU runner. Maintainers dispatch
+    # only main or version tags. Each runner needs Docker + NVIDIA Container Toolkit.
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    needs: [wheels, native]
+    strategy:
+      fail-fast: false
+      matrix:
+        gpu: [sm80, sm86, sm89, sm90]
+        python: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+    runs-on: [self-hosted, linux, x64, fuse-gpu, '${{ matrix.gpu }}']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          path: wheelhouse
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-tests
+          path: build/native-tests
+      - run: chmod +x build/native-tests/fuse_*
+      - run: bash scripts/ci_gpu_test.sh '${{ matrix.python }}' '${{ matrix.gpu }}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gpu-${{ matrix.gpu }}-py${{ matrix.python }}
+          path: build/gpu-evidence/*
+          if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish != 'none' && startsWith(github.ref, 'refs/tags/v')
+    needs: [gpu, wheels, native, source, format]
+    runs-on: ubuntu-24.04
+    environment:
+      name: ${{ inputs.publish }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - run: python scripts/check_artifacts.py dist --complete --tag "$GITHUB_REF_NAME"
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: ${{ inputs.publish == 'testpypi' && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}

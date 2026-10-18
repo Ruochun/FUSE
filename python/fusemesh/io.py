@@ -1,4 +1,5 @@
 """Trimesh adapters for local files and in-memory meshes; no implicit repair."""
+
 from __future__ import annotations
 
 import os
@@ -21,12 +22,14 @@ def _arrays(mesh):
         raise ValueError("faces must have shape (M, 3)")
     if not np.isfinite(v).all():
         raise ValueError("vertices must be finite")
-    if f.dtype.kind not in 'iu':
+    if f.dtype.kind not in "iu":
         raise ValueError("face indices must be integers")
     if f.size and (np.any(f < 0) or np.any(f >= len(v))):
         raise ValueError("face index is outside the vertex array")
-    return (np.array(v, dtype=np.float64, order='C', copy=True),
-            np.array(f, dtype=np.uint64, order='C', copy=True))
+    return (
+        np.array(v, dtype=np.float64, order="C", copy=True),
+        np.array(f, dtype=np.uint64, order="C", copy=True),
+    )
 
 
 def _check_off(stream):
@@ -35,15 +38,17 @@ def _check_off(stream):
     Trimesh remains the geometry reader. This streaming guard checks record
     counts and indices too, so malformed faces cannot be discarded or repaired.
     """
+
     def records():
         for line in stream:
-            text = line.split('#', 1)[0].strip()
+            text = line.split("#", 1)[0].strip()
             if text:
                 yield text.split()
+
     rows = records()
     try:
         header = next(rows)
-        if header[0] not in ('OFF', 'COFF'):
+        if header[0] not in ("OFF", "COFF"):
             raise ValueError("expected an OFF or COFF header")
         counts = header[1:] or next(rows)
         if len(counts) != 3:
@@ -58,7 +63,9 @@ def _check_off(stream):
         for i in range(nf):
             row = next(rows)
             if int(row[0]) != 3:
-                raise ValueError(f"OFF face {i} is not triangular; triangulate the mesh before loading")
+                raise ValueError(
+                    f"OFF face {i} is not triangular; triangulate the mesh before loading"
+                )
             if len(row) < 4:
                 raise ValueError(f"OFF face {i} is truncated")
             if any(int(x) < 0 or int(x) >= nv for x in row[1:4]):
@@ -74,21 +81,25 @@ def _load_source(source):
         return [_arrays(source)]
     if isinstance(source, trimesh.Scene):
         scene = source
-        label = 'scene'
+        label = "scene"
     elif isinstance(source, (str, os.PathLike)):
         path = Path(source)
         label = str(path)
         # Opening the file ourselves limits this helper to local files and gives
         # normal FileNotFoundError/PermissionError diagnostics.
         try:
-            if path.suffix.lower() == '.off':
-                with path.open('r', encoding='utf-8-sig') as stream:
+            if path.suffix.lower() == ".off":
+                with path.open("r", encoding="utf-8-sig") as stream:
                     _check_off(stream)
-            with path.open('rb') as stream:
+            with path.open("rb") as stream:
                 scene = trimesh.load_scene(
-                    stream, file_type=path.suffix.lstrip('.').lower(),
+                    stream,
+                    file_type=path.suffix.lstrip(".").lower(),
                     resolver=trimesh.resolvers.FilePathResolver(str(path.resolve())),
-                    process=False, maintain_order=True, allow_remote=False)
+                    process=False,
+                    maintain_order=True,
+                    allow_remote=False,
+                )
         except (ValueError, TypeError, IndexError, KeyError) as error:
             raise ValueError(f"cannot load mesh {path}: {error}") from error
     else:
@@ -102,8 +113,11 @@ def _load_source(source):
             raise ValueError(f"{label}: node {node!r} is not a triangle mesh")
         v, f = _arrays(mesh)
         transform = np.asarray(transform, dtype=np.float64)
-        if (transform.shape != (4, 4) or not np.isfinite(transform).all()
-                or not np.array_equal(transform[3], [0, 0, 0, 1])):
+        if (
+            transform.shape != (4, 4)
+            or not np.isfinite(transform).all()
+            or not np.array_equal(transform[3], [0, 0, 0, 1])
+        ):
             raise ValueError(f"{label}: node {node!r} requires a finite affine transform")
         # Transform positions once per instance, retaining disconnected shells
         # within the geometry. Reflections must also reverse triangle winding.
@@ -156,7 +170,7 @@ def save_mesh(path, mesh):
 
     The extension selects the format. Geometry only: no materials or textures.
     """
-    if hasattr(mesh, 'vertices') and hasattr(mesh, 'faces'):
+    if hasattr(mesh, "vertices") and hasattr(mesh, "faces"):
         vertices, faces = mesh.vertices, mesh.faces
     else:
         vertices, faces = mesh

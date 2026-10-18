@@ -11,4 +11,4 @@ struct SparseTopology {
     double candidates_ms = 0, keys_ms = 0, index_ms = 0;
 };
 SparseTopology make_topology(const Scene&, const ReconstructionOptions&);
-}
+}  // namespace fuse::detail

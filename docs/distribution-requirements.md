@@ -49,29 +49,32 @@ Trimesh is now a standard Python runtime dependency, installed by ordinary
 `pip install fusemesh` (no I/O extra). The adapter currently requires
 `trimesh>=4.12.2,<5`; version 4.12.2 was tested on CPython 3.13 and declares
 Python >=3.8, so it does not itself rule out the future Python 3.9 target.
-The full Python matrix remains outstanding. No Trimesh soft extras or new
+The portable-wheel Python matrix remains subject to M4 release acceptance. No Trimesh soft extras or new
 native submodules are required for the tested OFF/OBJ/GLB path.
 See [mesh loading](mesh-loading.md).
 
-## Work still required
+## M4 implementation and remaining acceptance
 
-| Requirement | Outstanding implementation and acceptance evidence | Milestone |
+See [release instructions](releasing.md) for the authoritative platform policy,
+workflow setup, formatting commands, and publication procedure. See
+[M4 validation](m4-validation.md) for measured local results. A configured CI job
+is not a completed release qualification.
+
+| Requirement | Implementation and remaining acceptance | Milestone |
 | --- | --- | --- |
-| CPython 3.9–3.14 support | Lower the Python minimum in both `pyproject.toml` and CMake only alongside compatibility work. Select compatible nanobind, NumPy, and build/test dependency versions; build, install, and execute tests for all six Python versions. Current metadata requires 3.10+, and only 3.13 has been tested. | M3–M4 |
-| Binding dependency compatibility | Preserve a Python-3.9-compatible binding toolchain. The current nanobind 2.x constraint allows this; nanobind 3.x requires Python 3.10+. Any upgrade must retain the promised Python matrix or explicitly revise the support policy. | M3–M4 |
-| GitHub wheel automation | Add GitHub Actions workflows, preferably using cibuildwheel, with pinned build environments, initialized submodules, explicit CUDA architecture targets, recorded tool versions, and uploaded artifacts. No workflow is implemented yet. | M4 |
-| GPU CI execution | Provide GPU-capable runners, such as self-hosted runners, to install and exercise the built wheels. Compilation can run without a GPU; import-only checks are insufficient for release acceptance. | M4 |
-| Portable Linux wheels | Choose a manylinux baseline, build in an appropriate CUDA-equipped environment, inspect/repair dependencies, and validate clean installations. The current local wheel retains a `linux_x86_64` tag; its observed symbol floor is glibc 2.34. | M4 |
-| Platform support | Finalize OS/CPU architecture coverage. If Windows is included in the release matrix, add separate Windows builds, DLL dependency inspection/repair, and GPU tests. CUDA execution on macOS is outside the current backend scope. | M4 |
-| GPU and driver support | Finalize and document the architecture set, CUDA family, minimum driver, and PTX policy. Execute compatibility tests on representative supported hardware and drivers; only SM 89 has been executed through M3. | M3–M4 |
-| Toolkit-free reconstruction | Repeat clean-environment tests with actual reconstruction after M1/M2 and after any native dependency change. Verify both direct dependencies and libraries loaded at runtime. M1 dense and M2 sparse reconstruction pass toolkit-hidden tests on the initial platform; expand this evidence across the release matrix. | M1–M4 |
-| Failure diagnostics | Extend tests for missing/incompatible drivers, unsupported devices, and resource failures as the reconstruction backend develops. M0 covers invalid devices and no-visible-GPU errors, but not an actual missing-driver host. | M1–M4 |
-| Reproducible source releases | Continue verifying that source archives contain pinned native sources and build independently of the checkout. Source builds may require a compiler and CUDA toolkit; the toolkit-free promise applies to supported binary wheels. | M4 |
-| Public distribution | Check package-name availability, audit final redistribution terms/notices and artifact size, document compatibility and installation, rehearse on TestPyPI, and configure release publishing. No package has been published. | M4 |
-
-The reconstruction implementation remains the priority for M1–M3. These release
-requirements should constrain dependency choices now, without presenting the
-unimplemented matrix as supported.
+| CPython 3.9–3.14 | Metadata and CMake now permit 3.9; six wheel ABIs are configured. Local GPU matrix evidence is in M4 validation. Run the portable-wheel matrix in GitHub before release. | M4 |
+| Binding compatibility | Build requirements pin nanobind 2.15.0 and scikit-build-core 0.11.6. NumPy has a Python-3.9-compatible bound; other interpreters resolve compatible distributions. | M4 |
+| GitHub wheel automation | `wheels.yml` builds each wheel from a self-contained sdist using cibuildwheel and a digest-pinned CUDA 12.8 manylinux image. Run the workflow on the remote repository. | M4 |
+| GPU CI | Driver-only container tests, standalone native tests, GPU identity checks, and evidence uploads are configured for SM80/86/89/90 and six Python versions. Provision the required self-hosted runners and execute the matrix. | M4 |
+| Portable wheels | Release baseline is manylinux_2_28 Linux x86-64; auditwheel and artifact checks reject newer glibc or toolkit dependencies. Local Ubuntu wheels remain nonportable development artifacts. Container build execution is still required. | M4 |
+| Platform support | Initial release is Linux x86-64 only. Windows, macOS, ARM, PyPy, and free-threaded Python are not part of this matrix. | M4 |
+| GPU/driver coverage | CUDA 12.8, SM80/86/89/90 native code and compute-90 PTX; conservative driver floor 570.124.06. Validate all architectures, forced PTX on SM90, and minimum/current drivers. Local execution covers SM89 only. | M4 |
+| Toolkit-free execution | Full reconstruction tests run locally with toolkit directories hidden; GitHub GPU jobs use Python containers with no toolkit. Expand execution to all release GPU/platform combinations. | M4 |
+| Failure diagnostics | Existing tests cover invalid devices, unavailable GPUs, input errors, and memory budgets. Hosted CPU jobs include an actual missing-driver probe and pre-CUDA validation without GPU passthrough. The missing-driver probe also passed locally with driver directories hidden. Physical old-driver/unsupported-GPU qualification remains external work. | M4 |
+| Source release | Sources include pinned NanoVDB, tests, scripts, formatting files, and notices. All CI wheels and native tests build from the archive. Local source-build evidence is recorded separately. | M4 |
+| Publication | Artifact checks, Trusted Publishing jobs, tag/version gates, and TestPyPI instructions are implemented. Configure protected environments/registry publishers, review redistribution terms, rehearse TestPyPI installs, then publish. No registry upload has occurred. | M4 |
+| Formatting | `.clang-format`, Black settings, CMake formatting settings, pinned tool requirements, and `.format_all --check` are implemented. First-party sources are formatted; external submodules are excluded. | M4 |
+| Surface simplification | Optional reduction of triangles on simple surfaces, with geometric/topological validation; no backend selected yet. Adaptive voxel refinement remains deferred. | M5 |
 
 References:
 
