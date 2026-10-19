@@ -1,8 +1,7 @@
 # Loading and fusing mesh files
 
-Trimesh is a required runtime dependency starting with `fusemesh 0.0.1.dev2`.
-A normal wheel installation installs it automatically. The tested version is
-Trimesh 4.12.2; the current dependency range is `>=4.12.2,<5`.
+Trimesh is installed automatically with the wheel and provides the file readers
+and exporters. The dependency range is `>=4.12.2,<5`.
 
 ```python
 import fusemesh
@@ -25,9 +24,9 @@ multiple instances and directs callers to `load_meshes`. `load_meshes` accepts
 one source or an iterable of sources and returns a list of pairs. Sources can
 be local file paths, `trimesh.Trimesh`, or `trimesh.Scene` objects. Returned arrays
 are owned contiguous float64 coordinates and uint64 triangle indices. Loading
-requires no GPU. `reconstruct` additionally accepts the original array pairs
+requires no GPU. `reconstruct` additionally accepts array pairs
 and lists mixing array pairs, files, and Trimesh objects. A single array pair
-still uses the original `reconstruct([(vertices, faces)], ...)` syntax.
+uses `reconstruct([(vertices, faces)], ...)` syntax.
 
 ## Geometry semantics
 
@@ -45,15 +44,14 @@ still uses the original `reconstruct([(vertices, faces)], ...)` syntax.
 - Multiple overlapping solids stored as disconnected shells of a single
   geometry are not automatically detected or split. Supply them as separate
   files or mesh objects when they are intended as separate union inputs.
-- Loading checks numeric/index structure. Reconstruction performs the existing
-  closed, consistently oriented manifold checks by default. It still does not
-  detect geometric self-intersections. Open meshes may load, but reconstruction
-  rejects them; loading is not a repair operation.
+- Loading checks numeric/index structure. Reconstruction performs closed, consistently oriented manifold checks by default. It still does not
+  detect geometric self-intersections. Open meshes may load, but full reconstruction validation
+  rejects them. Basic validation does not make them supported solids.
 
 ## Formats and triangulation
 
-Triangular ASCII OFF (including COFF headers/colors in `.off` files) is the
-initial strict format. A streaming guard checks counts, finite coordinates,
+Triangular ASCII OFF (including COFF headers/colors in `.off` files) uses a
+strict reader guard. A streaming guard checks counts, finite coordinates,
 face arity, truncation, and indices before Trimesh reads the geometry. OFF
 polygons are rejected with a request to triangulate first. Trimesh's automatic
 fan triangulation is not sufficient to guarantee correct concave polygons.
@@ -69,9 +67,9 @@ or arbitrary polygon-triangulation guarantee is implied.
 `save_mesh(path, result_or_pair)` exports geometry through Trimesh; the filename
 extension chooses the format. Text export precision is format-dependent, so
 export/reload is not promised to be bitwise exact. OFF/OBJ round trips are
-checked within their text precision. The CUDA reconstruction code is unchanged.
+checked within their text precision.
 
-## File-based test command
+## Run from a checkout
 
 ```sh
 python examples/fuse_files.py a.off b.off \
@@ -84,32 +82,28 @@ and index checks and does not repair the mesh or guarantee correct inside/outsid
 classification for open or nonmanifold inputs. The selected mode is recorded in
 the JSON output.
 
-The file demo currently defaults to a 16 GiB device-buffer limit; the library
+The file demo defaults to a 16 GiB device-buffer limit; the library
 default remains 512 MiB. Set `--memory-mib` explicitly for reproducible runs.
 The command prints input/output counts, loading and
 reconstruction wall time, backend stage timings, and peak FUSE device-buffer
 bytes. Omit dense diagnostic fields for large workloads. Reconstruction
 resamples even a single input mesh; this is not just a format conversion.
 
-## Validation
+## Simplify and export both surfaces
 
-On 18 October 2026, the `0.0.1.dev2` Linux CPython 3.13 wheel was installed
-into the runtime environment with normal dependency resolution, which installed
-Trimesh 4.12.2 automatically. **112 tests passed** with CUDA toolkit directories
-hidden: 26 I/O tests plus all 86 existing tests, on the RTX 4060. Native CUDA
-code is unchanged from M2. The full Python/platform release matrix remains
-outstanding.
+```bash
+python examples/fuse_files.py model.off --voxel-size 0.05 --memory-mib 512 \
+  --simplify-error 0.01 --target-faces 5000 \
+  --unsimplified-output original.obj --output reduced.obj
+```
 
-`tests/test_io.py` covers independent OFF fixtures, comments/colors, malformed
-and polygonal faces, owned arrays, preserved unused vertices and winding,
-scene instances/reflections, rejected non-mesh/singular scenes, and loading
-without a visible GPU. GPU tests compare file-loaded single/overlapping/
-contained/cavity meshes against direct array input on **both** sparse and dense
-backends, including exact field and indexed-output comparisons. A GLB scene
-checks that overlapping instances are fused as separate solids, not concatenated
-parity shells. A subprocess exercises the file demo and OBJ reload.
+The original output is saved before simplification. The two output paths must
+be different. `--target-faces` and `--unsimplified-output` require
+`--simplify-error`. The command reports simplification counts, bounds, rejected
+attempts, and elapsed time in its JSON output.
 
-These are generated fixtures, not validation of a user-provided mesh. No user
-mesh file was supplied for this change. The existing M1/M2 tests remain part of
-the full acceptance suite. See [M2 validation](m2-validation.md) for native
-reconstruction coverage and numerical limitations.
+Simplification always requires a closed manifold mesh, even when reconstruction
+used `--validation basic`. Its default failure policy raises an error; use
+`--simplify-on-failure keep` to retain a shell when no reduced candidate passes.
+This does not allow invalid input. See [simplification](simplification.md) for
+volume, crease-angle, and verification-budget controls.

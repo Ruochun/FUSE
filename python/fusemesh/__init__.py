@@ -1,4 +1,4 @@
-"""Fast Union Surface Extraction: sparse CUDA reconstruction (M3)."""
+"""Fast Union Surface Extraction: CUDA reconstruction and CPU surface simplification."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from typing import Optional
 
 import numpy as np
 
+from .simplification import simplify, SimplificationError
 from .io import load_mesh, load_meshes, save_mesh, _is_source
 
 from ._native import ResourceError, _reconstruct, build_info, smoke_test
@@ -15,6 +16,8 @@ from ._native import ResourceError, _reconstruct, build_info, smoke_test
 __version__ = build_info()["version"]
 __all__ = [
     "reconstruct",
+    "simplify",
+    "SimplificationError",
     "ReconstructionResult",
     "ResourceError",
     "build_info",
@@ -30,8 +33,8 @@ class ReconstructionResult:
     """Indexed world-space mesh and diagnostic metadata.
 
     Vertices are float64 (N, 3), faces are uint64 (M, 3). Optional field samples
-    are float64 in (z, y, x) order and world-distance units. Output arrays own
-    their backing native storage through a capsule and outlive this container.
+    are float64 in (z, y, x) order and world-distance units. Output arrays retain
+    their backing storage independently and outlive this container.
     """
 
     vertices: np.ndarray
@@ -67,7 +70,7 @@ def reconstruct(
     ``max_memory_bytes`` bounds FUSE-owned device buffers, excluding the CUDA
     context and host copies/results. Increase voxel_size if ResourceError is
     raised. Subvoxel features may disappear. ``backend='sparse'`` uses NanoVDB
-    candidate topology; ``'dense'`` retains the M1 reference implementation.
+    candidate topology; ``'dense'`` retains the dense reference implementation.
     ``return_field`` returns a dense diagnostic field, querying absent samples
     explicitly. Its host array must separately fit max_memory_bytes; sparse
     calls use bounded GPU chunks to fill it. Omit it for very large domains.

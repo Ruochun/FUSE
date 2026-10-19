@@ -1,10 +1,10 @@
-# FUSE 0.2 API contract
+# API reference
 
-The Python entry points are `reconstruct`, `load_mesh`, `load_meshes`,
-`save_mesh`, `build_info`, and `smoke_test`. `ReconstructionResult` and
-`ResourceError` are public types. Names beginning with `_` are private.
-The 0.2 line preserves these signatures and result meanings; metadata may gain
-additional keys. Native consumers should rebuild when changing library versions;
+The Python entry points are `reconstruct`, `simplify`, `load_mesh`, `load_meshes`,
+`save_mesh`, `build_info`, and `smoke_test`. `ReconstructionResult`,
+`ResourceError`, and `SimplificationError` are public types. Names beginning
+with `_` are private. Metadata may gain additional keys. Native consumers should
+rebuild when changing library versions;
 a cross-version C++ ABI is not promised.
 
 ## Reconstruction
@@ -48,10 +48,15 @@ arrays. For nonempty scenes the CUDA runtime/driver must be available.
 - `field`: `None`, or float64 `(nz,ny,nx)` world-distance values.
 - `metadata`: the mapping below.
 
-Arrays are writable and retain their native backing storage even after the
-result container is deleted. Sharing an array does not make it a view of input
-arrays or another reconstruction. Face numbering is deterministic on the
+Arrays are writable and retain their backing storage even after the result
+container is deleted. Native reconstruction uses capsule-owned storage;
+simplification returns NumPy-owned arrays. Sharing an array does not make it a
+view of input arrays or another reconstruction. Face numbering is deterministic on the
 validated platform; cross-platform bitwise identity is not part of the contract.
+
+The following metadata describes reconstruction. Simplifying a reconstruction
+updates output counts and adds `simplification`; other reconstruction diagnostics
+are retained. Simplifying a standalone mesh does not populate grid or GPU fields.
 
 | Metadata | Meaning |
 | --- | --- |
@@ -90,13 +95,13 @@ retain device buffers. GPU hardware faults may require restarting the process.
 ## Version and native API
 
 The root [`VERSION`](../VERSION) file is the sole editable release version.
-Use `MAJOR.MINOR.PATCH` (currently `0.2.0`). Wheel/sdist metadata and CMake read it
+Use `MAJOR.MINOR.PATCH`. Wheel/sdist metadata and CMake read it
 at build time. `fusemesh.__version__`, `build_info()["version"]`, and native
 `fuse::version()` report that compiled version. Change the file, rebuild, install
 the new wheel, and restart processes that loaded the old extension.
 
 `build_info()` also reports the pinned NanoVDB revision, CUDA compiler version,
-compiled architectures, static runtime choice, and implementation milestone.
+compiled architectures and static runtime choice.
 Import, loading, version queries, and build information do not initialize CUDA.
 
 Native callers use `fuse/reconstruct.h` and `fuse/version.h`, linked through
@@ -106,10 +111,39 @@ not Trimesh or NanoVDB types. CMake package-version compatibility is exact.
 
 ## Numerical scope
 
-The supported inputs, sign/zero conventions, face ambiguity decisions, and
-subvoxel/degenerate-contact limitations remain those documented in
-[M1 decisions](decisions/0002-m1-dense-baseline.md) and
-[M2 decisions](decisions/0003-m2-sparse.md). Version 0.2 does not add adaptive
-resolution, exact Booleans, mesh repair, or an error-bound API. Public PyPI
-publishing and full GPU/platform qualification require the M4 acceptance gates;
-see [release instructions](releasing.md) and [validation](m4-validation.md).
+Reconstruction uses uniform sampling and an indexed contour-disk extraction
+policy. Voxel size controls resolution; it is not a guaranteed surface-distance
+bound. Subvoxel features and unresolved contacts can change topology or disappear.
+See [architecture and numerical behavior](FUSE-design.md) for sign conventions,
+zero handling, and cell ambiguity decisions.
+
+There is no adaptive resolution, exact Boolean, mesh repair, or CPU reconstruction
+fallback. Simplification has a separate distance-checking API relative to the
+mesh supplied to it; it does not establish a bound on reconstruction error.
+
+## Surface simplification
+
+```python
+simplify(mesh, *, max_error, target_faces=None, feature_angle=45.0,
+         max_volume_change=0.01, max_checks=200000, on_failure="raise")
+```
+
+`fusemesh.simplify` accepts a reconstruction result, Trimesh, or array pair and
+returns a new `ReconstructionResult` with independent arrays and metadata. It runs
+on the CPU and always validates closed manifold topology. This requirement is
+part of FUSE's quality contract, not a general restriction of quadric decimation.
+`on_failure="keep"` handles rejected candidates; it never bypasses input checks.
+`SimplificationError` is a `RuntimeError` subclass. See
+[simplification controls and quality checks](simplification.md).
+
+## Loading, export and diagnostics
+
+- `load_mesh(source)` returns one `(vertices, faces)` pair and rejects sources
+  containing multiple mesh instances.
+- `load_meshes(sources)` accepts one source or an iterable and returns a list of
+  pairs. Sources are paths, Trimesh objects, or Scene objects, not raw array pairs.
+- `save_mesh(path, result_or_pair)` exports geometry using the filename extension.
+  See [supported loading behavior](mesh-loading.md).
+- `build_info()` returns compiled build information without initializing CUDA.
+- `smoke_test(device=0)` performs a small CUDA check and returns float32 values
+  `[3.0, -2.0, 0.5, 7.0]`.

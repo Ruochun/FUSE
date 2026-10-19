@@ -28,3 +28,13 @@ Trimesh is installed separately through package dependencies, not vendored or
 statically linked into FUSE. It is distributed under the MIT license; its
 distribution includes the applicable copyright and license text.
 Project: https://github.com/mikedh/trimesh
+
+fast-simplification and Rtree (Python runtime dependencies)
+---------------------------------------------------------
+Installed separately through package dependencies; not vendored or statically
+linked into FUSE. Both Python projects use the MIT license. Rtree wheels bundle
+libspatialindex, whose MIT license is included in that distribution. See those
+distributions for their copyright and license texts.
+Projects: https://github.com/pyvista/fast-simplification
+          https://github.com/Toblerity/rtree
+          https://github.com/libspatialindex/libspatialindex

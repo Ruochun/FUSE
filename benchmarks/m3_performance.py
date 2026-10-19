@@ -1,7 +1,7 @@
 """Repeatable performance suite; optional local-file workload manifest.
 
 Run: python benchmarks/m3_performance.py --output build/m3.json
-Check: python benchmarks/m3_performance.py --baseline docs/benchmarks/m3-rtx4060.json --check
+Check: python benchmarks/m3_performance.py --baseline benchmarks/baselines/reconstruction-rtx4060.json --check
 Manifest: [{"name":"part", "paths":["part.off"], "voxel_size":0.1}]
 Paths in manifests are relative to the manifest; loading is timed separately.
 """

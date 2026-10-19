@@ -37,6 +37,11 @@ def check_metadata(data, version):
     dependencies = metadata.get_all("Requires-Dist", [])
     require(any(d.startswith("numpy") for d in dependencies), "missing NumPy dependency")
     require(any(d.startswith("trimesh") for d in dependencies), "missing Trimesh dependency")
+    require(
+        any(d.startswith("fast-simplification") for d in dependencies),
+        "missing simplification dependency",
+    )
+    require(any(d.startswith("rtree") for d in dependencies), "missing Rtree dependency")
 
 
 def check_wheel(path, version, portable=True):
@@ -113,6 +118,8 @@ def check_source(path, version):
             "external/openvdb/nanovdb/nanovdb/NanoVDB.h",
             "external/openvdb/LICENSE",
             "tests/test_m3.py",
+            "tests/test_simplification.py",
+            "python/fusemesh/simplification.py",
             "scripts/check_artifacts.py",
             "scripts/check_no_driver.py",
             "scripts/ci_native_build.sh",

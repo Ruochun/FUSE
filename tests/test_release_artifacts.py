@@ -23,7 +23,7 @@ def metadata(**changes):
     fields.update(changes)
     return (
         "\n".join(f"{k}: {v}" for k, v in fields.items())
-        + "\nRequires-Dist: numpy>=1.23\nRequires-Dist: trimesh>=4.12.2,<5\n"
+        + "\nRequires-Dist: numpy>=1.23\nRequires-Dist: trimesh>=4.12.2,<5\nRequires-Dist: fast-simplification==0.2.0\nRequires-Dist: rtree==1.4.1\n"
     ).encode()
 
 

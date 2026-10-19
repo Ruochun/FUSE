@@ -18,7 +18,7 @@ docker run --rm --gpus all \
     -w /tmp "$image" bash -euc '
         python -m venv /tmp/runtime
         /tmp/runtime/bin/python -m pip install --only-binary=:all: --find-links=/project/wheelhouse --no-index --no-deps fusemesh
-        /tmp/runtime/bin/python -m pip install "numpy>=1.23" "trimesh>=4.12.2,<5" "pytest>=8,<9"
+        /tmp/runtime/bin/python -m pip install --only-binary=:all: --find-links=/project/wheelhouse fusemesh "pytest>=8,<9"
         /tmp/runtime/bin/python -m pip check
         /tmp/runtime/bin/python -m pip freeze > /evidence/packages.txt
         /tmp/runtime/bin/python /project/scripts/runtime_evidence.py --expected-gpu "$EXPECTED_GPU" > /evidence/runtime.json

@@ -1,10 +1,9 @@
 # Building, validating, and releasing wheels
 
-M4 adds release infrastructure. Configuration is not evidence of a successful
-GitHub run or publication: see [M4 validation](m4-validation.md) for the actual
-checks completed and remaining external acceptance work.
+This is the maintainer guide. Users should start with
+[installation](installation.md) and [mesh loading](mesh-loading.md).
 
-## Initial release matrix
+## Release matrix
 
 - Linux x86-64, glibc 2.28 or newer (`manylinux_2_28_x86_64`).
 - Standard CPython 3.9, 3.10, 3.11, 3.12, 3.13, and 3.14, one wheel per ABI.
@@ -18,14 +17,15 @@ checks completed and remaining external acceptance work.
   Minimum-driver execution must be validated before claiming that floor.
 - NumPy starts at 1.23; Python 3.9 uses versions below 2.1. The resolver chooses
   a compatible release on other interpreters (including Python 3.14).
-  Trimesh remains a normal dependency. Build tools pin nanobind 2.15.0 and
-  scikit-build-core 0.11.6 to keep Python 3.9 support reproducible.
+  Trimesh, fast-simplification, and Rtree are normal dependencies; see
+  [distribution policy](distribution-requirements.md) for the Python-specific pins.
+  Build tools pin nanobind 2.15.0 and scikit-build-core 0.11.6 to keep Python 3.9 support reproducible.
 
 After publication, install with `python -m pip install --only-binary=:all: fusemesh`.
-The NVIDIA driver is required; the CUDA toolkit and a compiler are not. Ordinary
-`pip install fusemesh` also works on supported wheel platforms; unsupported
+GPU reconstruction requires an NVIDIA driver; the CUDA toolkit and a compiler
+are not needed for wheel use. Ordinary `pip install fusemesh` also works on supported wheel platforms; unsupported
 platforms may attempt a source build. Before publication, install the matching
-wheel downloaded from GitHub Actions. Version 0.2.0 alone does not imply a
+wheel downloaded from GitHub Actions. An artifact version alone does not imply a
 published or fully qualified release.
 
 ## Formatting
@@ -39,9 +39,8 @@ python -m pip install -r requirements/format.txt
 ```
 
 CI also runs actionlint and ShellCheck from the pinned requirements.
-The utility follows MoPhi's clang-format/Black approach. `.clang-format` owns
-C++/CUDA style, `pyproject.toml` owns Black style, and `.cmake-format.yaml` owns
-CMake style. It visits only first-party source directories and CMakeLists.txt;
+`.clang-format` owns C++/CUDA style, `pyproject.toml` owns Black style, and
+`.cmake-format.yaml` owns CMake style. It visits only first-party source directories and CMakeLists.txt;
 third-party submodules, build output, and virtual environments are excluded.
 Missing tools are errors. `PYTHON` may select the utility's interpreter; formatter
 executables must be on PATH. CI uses the same pinned tool versions and check mode.
@@ -92,9 +91,8 @@ Repository owners must configure the following external resources:
    required reviewers. Configure Trusted Publishers on both registries for
    owner `Ruochun`, repository `FUSE`, workflow `wheels.yml`, and the matching
    environment. No long-lived upload token is stored in the repository.
-3. Reserve/establish the `fusemesh` project as allowed by the registries. Public
-   JSON endpoints returned 404 during M4 preparation; this does not reserve the
-   name or guarantee that registry policy will permit it.
+3. Reserve/establish the `fusemesh` project as allowed by the registries. Project-name
+   availability must be checked directly with the registry before publication.
 
 Set `VERSION`, commit the exact release sources, and create a matching `vVERSION`
 tag. Dispatch that tag with `publish=testpypi`. After all build/GPU gates pass,
@@ -102,17 +100,19 @@ the protected environment controls OIDC publication. Install the TestPyPI wheel
 in a fresh driver-only environment, choosing dependencies from ordinary PyPI:
 
 ```bash
+release_version=$(cat VERSION)
 python -m pip download --no-deps --only-binary=:all: \
-  --index-url https://test.pypi.org/simple/ fusemesh==0.2.0 -d test-wheel
+  --index-url https://test.pypi.org/simple/ "fusemesh==$release_version" -d test-wheel
 python -m pip install test-wheel/fusemesh-*.whl
 python -c 'import fusemesh; print(fusemesh.build_info()); print(fusemesh.smoke_test())'
 ```
 
-Run the full reconstruction suite too. Repeat on the release matrix. Only then
-dispatch the same tag with `publish=pypi`. This rebuilds and retests artifacts;
-all gates apply again. PyPI versions are immutable; do not overwrite or assume
+Run the full test suite, including simplification, too. Repeat on the release
+matrix. Only then dispatch the same tag with `publish=pypi`. This rebuilds and
+retests artifacts; all gates apply again. PyPI versions are immutable; do not overwrite or assume
 `pip install` replaces an already installed build of the same version. For local
-iterations use `--force-reinstall --no-deps path/to/wheel.whl`.
+iterations use `--force-reinstall path/to/wheel.whl`; add `--no-deps` only when
+dependencies are already installed and unchanged.
 
 Before enabling publication, review the bundled notices and NVIDIA redistribution
 terms against the exact toolkit image. The wheel includes FUSE's BSD license,

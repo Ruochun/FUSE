@@ -1,141 +1,103 @@
 # FUSE — Fast Union Surface Extraction
 
-C++/CUDA reconstruction of the full boundary of a union of closed triangle
-meshes, with a NumPy-facing Python API. **M3 is implemented:** sparse NanoVDB
-reconstruction with optimized topology construction and BVH queries, documented
-API behavior, and repeatable performance checks. The dense backend remains a
-correctness reference. M4 release automation and formatting are configured;
-public PyPI wheels await release acceptance. See [release instructions](docs/releasing.md)
-and [M4 validation](docs/m4-validation.md).
+FUSE reconstructs a triangle mesh approximating the solid union of one or more
+closed meshes. It uses CUDA for field evaluation and surface extraction, sparse
+NanoVDB indexing to reduce work around empty space, and a Python API for loading,
+fusing, simplifying, and saving meshes.
 
-## Reconstruct a union
+Choose a uniform voxel size in your mesh's units to control sampling resolution.
+FUSE handles overlapping solids, containment, disconnected components, and
+resolved cavities. Optional CPU simplification reduces the output triangle count.
+It is an approximate reconstruction tool: original triangles and subvoxel features
+are not necessarily preserved.
+
+## Install
+
+Use a Linux x86-64 wheel matching your CPython version (3.9–3.14). Download and
+extract the corresponding `wheel-cp…` artifact from a successful
+[GitHub Actions build](https://github.com/Ruochun/FUSE/actions/workflows/wheels.yml),
+then install the **single matching wheel**:
+
+```bash
+python -m pip install /path/to/fusemesh-<version>-<python>-<abi>-<platform>.whl
+python -c 'import fusemesh; print(fusemesh.build_info()); print(fusemesh.smoke_test())'
+```
+
+Replace the placeholder path with the downloaded filename. Reconstruction and
+`smoke_test()` require an NVIDIA GPU and driver. Wheel installations include the
+CUDA runtime and Python dependencies; a CUDA toolkit or compiler is not required.
+Loading, saving, and simplification run on the CPU without initializing CUDA.
+
+See [installation and compatibility](docs/installation.md) for GPU requirements,
+source builds, and reinstalling a changed wheel with the same version number.
+
+## Fuse mesh files
 
 ```python
 import fusemesh
 
-result = fusemesh.reconstruct(
-    meshes=[(vertices_a, faces_a), (vertices_b, faces_b)],
-    voxel_size=0.05,  # world units
-    device=0,
-    backend="sparse",  # default; "dense" selects the M1 reference
-    max_memory_bytes=512 * 1024**2,
-)
-vertices = result.vertices  # float64 (N, 3), world coordinates
-faces = result.faces        # uint64 (M, 3), indexed triangles
+result = fusemesh.reconstruct(["a.off", "b.obj"], voxel_size=0.05)
+fusemesh.save_mesh("union.obj", result)
 print(result.metadata)
 ```
 
-Trimesh is installed automatically as the standard file-loading helper. You can
-pass a local path, a list of paths, Trimesh/Scene objects, or mix these with array
-pairs:
+A single path also works: `fusemesh.reconstruct("model.off", voxel_size=0.05)`.
+For arrays, use `reconstruct([(vertices, faces)], voxel_size=0.05)`; each array
+pair represents one solid. Returned vertices are float64 `(N, 3)` coordinates
+and faces are uint64 `(M, 3)` indices.
+
+From a repository checkout, run the file example:
+
+```bash
+python examples/fuse_files.py a.off b.obj \
+  --voxel-size 0.05 --memory-mib 512 --output union.obj
+```
+
+To try generated geometry without supplying a file:
+
+```bash
+python examples/union_demo.py
+```
+
+## Reduce output triangles
 
 ```python
-result = fusemesh.reconstruct(["a.off", "b.off"], voxel_size=0.05)
-fusemesh.save_mesh("union.obj", result)
-
-# Explicit loading returns our existing (vertices, faces) array pairs:
-meshes = fusemesh.load_meshes(["a.off", "b.off"])
-result = fusemesh.reconstruct(meshes, voxel_size=0.05)
+reduced = fusemesh.simplify(result, max_error=0.01, target_faces=5000)
+fusemesh.save_mesh("reduced.obj", reduced)
 ```
 
-OFF faces must already be triangles. Loading preserves units and does not
-repair or weld meshes. Scene instances are separate union inputs with their
-world transforms applied; disconnected shells within one geometry remain
-one solid. See [mesh loading](docs/mesh-loading.md) for formats and limitations.
+Simplification checks surface and sharp-edge deviation, per-shell volume, and
+manifold topology. `target_faces` is a soft goal; quality checks take priority.
+`max_error` is relative to the mesh being simplified, not the original union
+inputs. See [simplification](docs/simplification.md) for controls and limitations.
 
-Inputs are copied from real numeric vertex arrays and integer face arrays.
-The default `validation="full"` checks structural validity, closed edges,
-consistent face winding, and manifold vertex links. It does **not** detect
-self-intersections: inputs must already represent valid solids. `"basic"` skips
-topology checks but has the same supported-input requirements.
+## Input requirements and limits
 
-Separate inputs can overlap or contain one another. Disconnected components
-and enclosed cavity walls are preserved when resolved by the grid. There is no
-repair, smoothing, or automatic deletion of small components. Subvoxel walls,
-gaps, and components may disappear; voxel spacing is not an error guarantee.
-Degenerate contacts and unresolved cell-interior topology are not guaranteed
-manifold. See the [API contract](docs/api.md) and [M1 numerical and extraction policy](docs/decisions/0002-m1-dense-baseline.md).
+- Inputs must describe closed, consistently oriented manifold solids.
+  `validation="basic"` skips topology checks but does not make open or
+  nonmanifold solids supported. Self-intersections are not detected or repaired.
+- Trimesh loads local files. OFF faces must already be triangles; other formats
+  follow their reader's triangulation and grouping rules. See [mesh loading](docs/mesh-loading.md).
+- Smaller voxel sizes can resolve finer detail but require more work and memory.
+  Thin walls, narrow gaps, and small components may disappear. Voxel size is not
+  a guaranteed surface-error bound; output is not guaranteed manifold in
+  degenerate or unresolved cases.
+- The Python API defaults to a 512 MiB limit on explicit FUSE GPU buffers.
+  The file example defaults to 16 GiB; use `--memory-mib` to set it explicitly.
+  CUDA context memory and host memory are outside that limit.
+- FUSE does not perform exact triangle Booleans, mesh repair, adaptive voxel
+  refinement, automatic smoothing, or material/texture transfer.
 
-The memory limit covers FUSE device buffers, including scratch and output, but
-not CUDA context memory or host arrays. Sparse candidate topology is currently
-built on the CPU; field queries and extraction run on the GPU. A scene that exceeds the limit raises
-`fusemesh.ResourceError` (a `MemoryError`). Increase voxel spacing or the budget.
-Calls are synchronous and release the GIL during native computation. Empty
-input returns empty arrays without initializing CUDA.
+## Documentation
 
-For diagnostics, `return_field=True` also returns a float64 dense union field
-in `(z,y,x)` order, in world-distance units. `metadata['origin']` is sample zero;
-`metadata['grid_shape']` is `(x,y,z)`. The result records counts, peak allocated
-device bytes, active sample/candidate counts, NanoVDB bytes, and stage timings.
-The diagnostic field queries absent samples explicitly, including deep interiors;
-absence in NanoVDB never means exterior. Its host array must separately fit
-`max_memory_bytes`, so omit `return_field` for large sparse domains.
-`backend="dense"` retains the M1 reference; both backends use the same sampling
-and extraction policy. See [M2 decisions](docs/decisions/0003-m2-sparse.md). `build_info()` and `smoke_test()` remain
-available for build and GPU diagnostics.
+Start with the [documentation index](docs/README.md), or go directly to:
 
-## Build and install
+- [Installation and compatibility](docs/installation.md)
+- [Mesh loading and file examples](docs/mesh-loading.md)
+- [Python and native API](docs/api.md)
+- [Surface simplification](docs/simplification.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Testing and benchmarks](docs/testing.md)
 
-Local validation covers CPython 3.9–3.14 on Linux x86-64, CUDA toolkit 12.8,
-GCC 11, and an RTX 4060; all six installed wheels pass the reconstruction suite.
-See [M4 validation](docs/m4-validation.md). The conservative Linux
-driver floor is 570.124.06. Wheels compile SM 80/86/89/90 and compute-90 PTX; only
-SM 89 has been executed. Other platforms/drivers are not yet validated.
-
-```sh
-git submodule update --init --recursive
-python -m pip install build
-python -m build
-python -m pip install --upgrade dist/fusemesh-0.2.0-*.whl
-python -c 'import fusemesh; print(fusemesh.build_info()); print(fusemesh.smoke_test())'
-```
-
-When rebuilding without changing the version, use `--force-reinstall --no-deps`
-instead of `--upgrade`; pip does not compare wheel contents. Restart any Python
-process that has already loaded the extension.
-
-The root [`VERSION`](VERSION) file is the only release-version source. Change
-it, rebuild, and reinstall to bump the wheel, Python, and native versions together.
-
-A runnable OBJ demo is available with `python examples/union_demo.py`.
-For your own files:
-
-```sh
-python examples/fuse_files.py a.off b.off --voxel-size 0.05 --output build/union.obj
-```
-
-The intended public command is `pip install fusemesh`, without a CUDA extra.
-No package has been published yet. Local wheels statically link the CUDA runtime
-and require an NVIDIA GPU/driver, but no toolkit or compiler at runtime. Source
-builds require CUDA 12.8, a C++ compiler, and CMake 3.24+ (the Python build can
-install CMake). Source archives include the pinned NanoVDB sources. No OpenVDB
-CPU library, TBB, upstream Python bindings, or viewers are required.
-
-## Native library and tests
-
-```sh
-cmake -S . -B build/native -DFUSE_BUILD_PYTHON=OFF -DFUSE_BUILD_TESTS=ON \
-  -DCMAKE_BUILD_TYPE=Release
-cmake --build build/native -j2
-ctest --test-dir build/native --output-on-failure
-python -m pip install pytest
-python -m pytest
-```
-
-The installed `FUSE::fuse` CMake target exposes
-[`fuse/reconstruct.h`](include/fuse/reconstruct.h) independently of Python.
-Native development consumers need the CUDA toolkit to link the static library.
-Python tests require the installed wheel and a GPU; `pytest -m 'not gpu'` runs
-input/metadata checks on machines without a visible GPU.
-
-The tests compare GPU fields with analytic solids and an independent NumPy
-solid-angle/distance reference. They check closure, winding, components, Euler
-characteristics, volume, surface error, resource limits, and sampling losses.
-Native tests exercise all cube sign cases and shared-face extraction. See
-[M3 validation](docs/m3-validation.md), [M2 validation](docs/m2-validation.md), [M1 validation](docs/m1-validation.md), and [M0 validation](docs/m0-validation.md).
-
-See [the design](docs/FUSE-design.md),
-[distribution requirements](docs/distribution-requirements.md),
-[M0 decisions](docs/decisions/0001-m0-build.md), and
-[NanoVDB inventory](docs/nanovdb-inventory.md).
-FUSE uses BSD-3-Clause; third-party terms are in `licenses/` and wheel metadata.
+FUSE uses BSD-3-Clause. Third-party notices are in [licenses](licenses/THIRD-PARTY-NOTICES.txt)
+and the installed wheel metadata.

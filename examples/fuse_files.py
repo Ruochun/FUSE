@@ -25,7 +25,41 @@ def main():
     )
     parser.add_argument("--device", type=int, default=0)
     parser.add_argument("--memory-mib", type=int, default=16 * 1024)
+    parser.add_argument(
+        "--simplify-error", type=float, help="maximum surface/crease deviation in mesh units"
+    )
+    parser.add_argument(
+        "--target-faces", type=int, help="soft triangle-count goal for simplification"
+    )
+    parser.add_argument(
+        "--simplify-volume-change",
+        type=float,
+        default=0.01,
+        help="maximum relative volume change per shell (default: 0.01)",
+    )
+    parser.add_argument(
+        "--feature-angle",
+        type=float,
+        default=45.0,
+        help="protect creases at or above this dihedral angle in degrees",
+    )
+    parser.add_argument(
+        "--simplify-max-checks",
+        type=int,
+        default=200000,
+        help="maximum distance-verification simplex checks per candidate",
+    )
+    parser.add_argument("--simplify-on-failure", choices=("raise", "keep"), default="raise")
+    parser.add_argument(
+        "--unsimplified-output",
+        type=Path,
+        help="also save the original reconstruction before simplification",
+    )
     args = parser.parse_args()
+    if args.simplify_error is None and (args.target_faces is not None or args.unsimplified_output):
+        parser.error("--target-faces and --unsimplified-output require --simplify-error")
+    if args.unsimplified_output and args.unsimplified_output.resolve() == args.output.resolve():
+        parser.error("--unsimplified-output must differ from --output")
     start = time.perf_counter()
     meshes = fusemesh.load_meshes(args.inputs)
     loading_ms = (time.perf_counter() - start) * 1000
@@ -39,6 +73,19 @@ def main():
         max_memory_bytes=args.memory_mib * 1024**2,
     )
     reconstruction_ms = (time.perf_counter() - start) * 1000
+    if args.unsimplified_output:
+        args.unsimplified_output.parent.mkdir(parents=True, exist_ok=True)
+        fusemesh.save_mesh(args.unsimplified_output, result)
+    if args.simplify_error is not None:
+        result = fusemesh.simplify(
+            result,
+            max_error=args.simplify_error,
+            target_faces=args.target_faces,
+            feature_angle=args.feature_angle,
+            max_volume_change=args.simplify_volume_change,
+            on_failure=args.simplify_on_failure,
+            max_checks=args.simplify_max_checks,
+        )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fusemesh.save_mesh(args.output, result)
     print(
