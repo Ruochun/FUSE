@@ -27,8 +27,8 @@ this matrix. A developer `linux_x86_64` wheel must not be relabeled as manylinux
 | Rtree | `1.4.1` | Simplification and quality spatial queries |
 | Manifold (optional `quality` extra) | `3.5.4` | Boolean reference union for multiple originals |
 
-These are standard dependencies; no CUDA, loading, or simplification extra is
-required. Pip selects a NumPy distribution compatible with the interpreter.
+NumPy, Trimesh, fast-simplification, and Rtree are standard dependencies;
+Manifold is optional. No CUDA, loading, or simplification extra is required. Pip selects a NumPy distribution compatible with the interpreter.
 Trimesh formats requiring additional optional dependencies are outside the
 built-in loading guarantee. The constraints in [pyproject.toml](../pyproject.toml)
 are authoritative.
@@ -42,12 +42,14 @@ and notices and must build without Git metadata or fetching a submodule.
 
 GitHub Actions builds wheels and native tests from the source archive. Hosted
 CPU checks cover import without a driver, input validation, and CPU utilities.
-GPU qualification runs the installed artifacts across the declared GPU/Python
-matrix in containers without a CUDA toolkit. SM90 qualification also checks
-forced PTX JIT. A build passing on a hosted CPU runner does not replace these
-GPU checks or a minimum-driver test.
+Optional GPU qualification runs the installed artifacts across all six Python
+versions on one selected architecture in containers without a CUDA toolkit.
+Selecting SM90 also checks forced PTX JIT. Publication defaults to hosted CPU
+checks without a GPU requirement. If GPU qualification is requested, its jobs
+must pass before uploading. Compiled targets, tested architectures, and tested
+driver versions must be distinguished in release claims.
 
-Before publication, artifact checks must verify the version/tag, six wheel ABIs,
+Before publication, artifact checks must verify the version (and release tag when used), six wheel ABIs,
 source contents, licenses, ELF dependencies, runtime search paths, and glibc
 requirements. Registry publishing uses protected GitHub environments and Trusted
 Publishing. Runtime components must be distributed under their applicable terms;

@@ -11,6 +11,11 @@ on:
         type: choice
         options: [none, testpypi, pypi]
         default: none
+      gpu:
+        description: Optional GPU validation (requires a matching self-hosted runner)
+        type: choice
+        options: [none, sm89, sm80, sm86, sm90]
+        default: none
 
 permissions:
   contents: read
@@ -102,14 +107,13 @@ jobs:
   gpu:
     # Never execute pull-request code on a persistent GPU runner. Maintainers dispatch
     # only main or version tags. Each runner needs Docker + NVIDIA Container Toolkit.
-    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: github.event_name == 'workflow_dispatch' && inputs.gpu != 'none' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     needs: [wheels, native]
     strategy:
       fail-fast: false
       matrix:
-        gpu: [sm80, sm86, sm89, sm90]
         python: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
-    runs-on: [self-hosted, linux, x64, fuse-gpu, '${{ matrix.gpu }}']
+    runs-on: [self-hosted, linux, x64, fuse-gpu, '${{ inputs.gpu }}']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -122,16 +126,25 @@ jobs:
           name: native-tests
           path: build/native-tests
       - run: chmod +x build/native-tests/fuse_*
-      - run: bash scripts/ci_gpu_test.sh '${{ matrix.python }}' '${{ matrix.gpu }}'
+      - run: bash scripts/ci_gpu_test.sh '${{ matrix.python }}' '${{ inputs.gpu }}'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: gpu-${{ matrix.gpu }}-py${{ matrix.python }}
+          name: gpu-${{ inputs.gpu }}-py${{ matrix.python }}
           path: build/gpu-evidence/*
           if-no-files-found: error
 
   publish:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish != 'none' && startsWith(github.ref, 'refs/tags/v')
+    # An intentionally skipped GPU job must not skip publication. A requested
+    # GPU run must pass; failed/cancelled build or validation jobs block uploads.
+    if: >-
+      always() && !cancelled() &&
+      github.event_name == 'workflow_dispatch' && inputs.publish != 'none' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) &&
+      needs.format.result == 'success' && needs.source.result == 'success' &&
+      needs.wheels.result == 'success' && needs.native.result == 'success' &&
+      ((inputs.gpu == 'none' && needs.gpu.result == 'skipped') ||
+       (inputs.gpu != 'none' && needs.gpu.result == 'success'))
     needs: [gpu, wheels, native, source, format]
     runs-on: ubuntu-24.04
     environment:
@@ -153,7 +166,13 @@ jobs:
         with:
           name: sdist
           path: dist
-      - run: python scripts/check_artifacts.py dist --complete --tag "$GITHUB_REF_NAME"
+      - name: Validate complete release and optional version tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            python scripts/check_artifacts.py dist --complete --tag "$GITHUB_REF_NAME"
+          else
+            python scripts/check_artifacts.py dist --complete
+          fi
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: ${{ inputs.publish == 'testpypi' && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
