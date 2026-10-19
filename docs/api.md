@@ -1,7 +1,7 @@
 # API reference
 
-The Python entry points are `reconstruct`, `simplify`, `load_mesh`, `load_meshes`,
-`save_mesh`, `build_info`, and `smoke_test`. `ReconstructionResult`,
+The Python entry points are `reconstruct`, `simplify`, `compare_surfaces`,
+`load_mesh`, `load_meshes`, `save_mesh`, `build_info`, and `smoke_test`. `ReconstructionResult`,
 `ResourceError`, and `SimplificationError` are public types. Names beginning
 with `_` are private. Metadata may gain additional keys. Native consumers should
 rebuild when changing library versions;
@@ -117,8 +117,8 @@ bound. Subvoxel features and unresolved contacts can change topology or disappea
 See [architecture and numerical behavior](FUSE-design.md) for sign conventions,
 zero handling, and cell ambiguity decisions.
 
-There is no adaptive resolution, exact Boolean, mesh repair, or CPU reconstruction
-fallback. Simplification has a separate distance-checking API relative to the
+Reconstruction provides no adaptive resolution, exact Boolean, mesh repair, or
+CPU fallback. Simplification has a separate distance-checking API relative to the
 mesh supplied to it; it does not establish a bound on reconstruction error.
 
 ## Surface simplification
@@ -147,3 +147,15 @@ part of FUSE's quality contract, not a general restriction of quadric decimation
 - `build_info()` returns compiled build information without initializing CUDA.
 - `smoke_test(device=0)` performs a small CUDA check and returns float32 values
   `[3.0, -2.0, 0.5, 7.0]`.
+
+## Surface quality
+
+```python
+compare_surfaces(originals, reconstructed, *, samples=10000, seed=0,
+                 tolerance=None, voxel_size=None, batch_size=256,
+                 degenerate_faces="error")
+```
+
+Returns a JSON-compatible dictionary of bidirectional and symmetric surface
+distance estimates. See [reconstruction quality](quality.md) for input contracts,
+union handling, metric definitions, CLI usage, and sampling limitations.

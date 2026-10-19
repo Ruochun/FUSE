@@ -19,6 +19,8 @@ Check release-specific compatibility information before deploying on another GPU
 Windows, macOS, ARM, PyPy, and free-threaded Python are outside the wheel matrix.
 The package provides no CPU reconstruction fallback. Python dependencies install
 automatically, including NumPy, Trimesh, fast-simplification, and Rtree.
+For [quality comparisons](quality.md) involving multiple original solids, install
+the optional `quality` extra (`pip install "fusemesh[quality]"`).
 
 ## Install a prebuilt wheel
 

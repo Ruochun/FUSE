@@ -3,7 +3,7 @@
 FUSE computes an approximate full boundary of the union of triangle-mesh solids.
 It uses one uniform isotropic voxel spacing, sparse candidate indexing, CUDA
 field queries, and indexed triangle extraction. The Python API also provides
-CPU loading, export, and optional mesh simplification.
+CPU loading, export, mesh simplification, and surface-quality measurement.
 
 ## Pipeline
 
@@ -134,6 +134,20 @@ closed manifold topology, orientation, and volume before accepting it. Its error
 reference is the unsimplified mesh, so it does not remove sampling error.
 See [the simplification contract](simplification.md) for its numerical limits,
 verification budget, and failure behavior.
+
+## Surface-quality measurement
+
+`compare_surfaces` runs independently on the CPU. It samples source points
+uniformly by triangle area in both directions and queries nearest target
+triangles through an Rtree index. Directional and symmetric RMS, percentiles,
+and tolerance coverage are estimates, not certified distance bounds.
+
+One original is treated as a surface, which may be open or nonmanifold.
+Multiple originals are valid solids combined by Manifold's float64 Boolean union;
+this independent reference removes buried surfaces before comparison. Optional
+zero-area-face removal acts on snapshots and reports per-input counts. It does
+not repair solid topology. See [quality measurement](quality.md) for contracts,
+metrics, and numerical limits.
 
 ## Resources
 

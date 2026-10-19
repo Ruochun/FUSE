@@ -20,7 +20,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=8"]
+test = ["pytest>=8", "manifold3d==3.5.4"]
+quality = ["manifold3d==3.5.4"]
+
+[project.scripts]
+fusemesh-quality = "fusemesh.quality:main"
 
 [tool.scikit-build]
 cmake.version = ">=3.24"
@@ -65,7 +69,7 @@ target-version = ["py39"]
 [tool.cibuildwheel]
 build = "cp39-manylinux_x86_64 cp310-manylinux_x86_64 cp311-manylinux_x86_64 cp312-manylinux_x86_64 cp313-manylinux_x86_64 cp314-manylinux_x86_64"
 build-frontend = "build"
-test-requires = ["pytest>=8,<9"]
+test-requires = ["pytest>=8,<9", "manifold3d==3.5.4"]
 test-command = "python {project}/scripts/check_no_driver.py && python -m pytest {project}/tests -m 'not gpu' -q"
 
 [tool.cibuildwheel.linux]

@@ -17,6 +17,7 @@ __version__ = build_info()["version"]
 __all__ = [
     "reconstruct",
     "simplify",
+    "compare_surfaces",
     "SimplificationError",
     "ReconstructionResult",
     "ResourceError",
@@ -137,4 +138,30 @@ def reconstruct(
             bool(return_field),
             backend == "sparse",
         )
+    )
+
+
+def compare_surfaces(
+    originals,
+    reconstructed,
+    *,
+    samples=10000,
+    seed=0,
+    tolerance=None,
+    voxel_size=None,
+    batch_size=256,
+    degenerate_faces="error",
+):
+    """Measure bidirectional surface distance; see fusemesh.quality.compare_surfaces."""
+    from .quality import compare_surfaces as compare
+
+    return compare(
+        originals,
+        reconstructed,
+        samples=samples,
+        seed=seed,
+        tolerance=tolerance,
+        voxel_size=voxel_size,
+        batch_size=batch_size,
+        degenerate_faces=degenerate_faces,
     )

@@ -19,6 +19,8 @@ This is the maintainer guide. Users should start with
   a compatible release on other interpreters (including Python 3.14).
   Trimesh, fast-simplification, and Rtree are normal dependencies; see
   [distribution policy](distribution-requirements.md) for the Python-specific pins.
+  The optional `quality` extra installs Manifold for multi-solid reference unions;
+  wheel tests include it to exercise this path.
   Build tools pin nanobind 2.15.0 and scikit-build-core 0.11.6 to keep Python 3.9 support reproducible.
 
 After publication, install with `python -m pip install --only-binary=:all: fusemesh`.

@@ -3,7 +3,7 @@
 FUSE reconstructs a triangle mesh approximating the solid union of one or more
 closed meshes. It uses CUDA for field evaluation and surface extraction, sparse
 NanoVDB indexing to reduce work around empty space, and a Python API for loading,
-fusing, simplifying, and saving meshes.
+fusing, simplifying, comparing, and saving meshes.
 
 Choose a uniform voxel size in your mesh's units to control sampling resolution.
 FUSE handles overlapping solids, containment, disconnected components, and
@@ -26,7 +26,8 @@ python -c 'import fusemesh; print(fusemesh.build_info()); print(fusemesh.smoke_t
 Replace the placeholder path with the downloaded filename. Reconstruction and
 `smoke_test()` require an NVIDIA GPU and driver. Wheel installations include the
 CUDA runtime and Python dependencies; a CUDA toolkit or compiler is not required.
-Loading, saving, and simplification run on the CPU without initializing CUDA.
+Loading, saving, simplification, and quality comparisons run on the CPU without
+initializing CUDA.
 
 See [installation and compatibility](docs/installation.md) for GPU requirements,
 source builds, and reinstalling a changed wheel with the same version number.
@@ -71,7 +72,30 @@ manifold topology. `target_faces` is a soft goal; quality checks take priority.
 `max_error` is relative to the mesh being simplified, not the original union
 inputs. See [simplification](docs/simplification.md) for controls and limitations.
 
-## Input requirements and limits
+## Measure surface accuracy
+
+```python
+report = fusemesh.compare_surfaces(
+    "original.off", "reconstructed.obj", tolerance=0.05,
+    degenerate_faces="drop",
+)
+print(report["symmetric"]["rms"])
+print(report["symmetric"]["f_score"])
+```
+
+This CPU comparison accepts open or nonmanifold surfaces. The explicit `drop`
+option excludes zero-area triangles and reports removal counts; the default is
+`error`. Distances use mesh coordinate units. Coverage and F-score depend on the
+chosen tolerance, and sampled maxima are not certified Hausdorff bounds.
+
+From a checkout, compare existing files with
+`python examples/quality_demo.py --inputs original.off reconstructed.obj`.
+Without `--inputs`, the demo reconstructs two boxes and requires a GPU and the
+`quality` extra. Multiple original solids also require that extra to construct
+an independent Boolean reference union. See [quality comparisons](docs/quality.md)
+for installation, metric definitions, and examples.
+
+## Reconstruction requirements and limits
 
 - Inputs must describe closed, consistently oriented manifold solids.
   `validation="basic"` skips topology checks but does not make open or
@@ -85,7 +109,7 @@ inputs. See [simplification](docs/simplification.md) for controls and limitation
 - The Python API defaults to a 512 MiB limit on explicit FUSE GPU buffers.
   The file example defaults to 16 GiB; use `--memory-mib` to set it explicitly.
   CUDA context memory and host memory are outside that limit.
-- FUSE does not perform exact triangle Booleans, mesh repair, adaptive voxel
+- Reconstruction does not perform exact triangle Booleans, mesh repair, adaptive voxel
   refinement, automatic smoothing, or material/texture transfer.
 
 ## Documentation
@@ -96,6 +120,7 @@ Start with the [documentation index](docs/README.md), or go directly to:
 - [Mesh loading and file examples](docs/mesh-loading.md)
 - [Python and native API](docs/api.md)
 - [Surface simplification](docs/simplification.md)
+- [Reconstruction quality](docs/quality.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Testing and benchmarks](docs/testing.md)
 

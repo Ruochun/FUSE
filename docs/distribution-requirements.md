@@ -24,7 +24,8 @@ this matrix. A developer `linux_x86_64` wheel must not be relabeled as manylinux
 | NumPy | `>=1.23`, also `<2.1` on Python 3.9 | Mesh arrays |
 | Trimesh | `>=4.12.2,<5` | File loading, export, and geometry helpers |
 | fast-simplification | `0.1.12` on Python 3.9; `0.2.0` on Python 3.10+ | CPU decimation |
-| Rtree | `1.4.1` | Simplification spatial queries |
+| Rtree | `1.4.1` | Simplification and quality spatial queries |
+| Manifold (optional `quality` extra) | `3.5.4` | Boolean reference union for multiple originals |
 
 These are standard dependencies; no CUDA, loading, or simplification extra is
 required. Pip selects a NumPy distribution compatible with the interpreter.

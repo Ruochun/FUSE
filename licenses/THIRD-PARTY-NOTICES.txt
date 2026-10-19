@@ -38,3 +38,9 @@ distributions for their copyright and license texts.
 Projects: https://github.com/pyvista/fast-simplification
           https://github.com/Toblerity/rtree
           https://github.com/libspatialindex/libspatialindex
+
+Manifold (optional quality dependency)
+--------------------------------------
+Installed separately, not vendored or linked into FUSE. Distributed under
+Apache-2.0; its distribution includes copyright and license notices.
+Project: https://github.com/elalish/manifold

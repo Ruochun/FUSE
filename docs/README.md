@@ -2,14 +2,15 @@
 
 FUSE approximates the union of closed triangle-mesh solids by sampling a shared
 field and extracting an indexed surface. Reconstruction runs on an NVIDIA GPU;
-file loading, export, and optional surface simplification run on the CPU.
+file loading, export, surface simplification, and quality comparisons run on the CPU.
 
 ## Using FUSE
 
 1. [Install a wheel or build from source](installation.md).
 2. [Load files and reconstruct a union](mesh-loading.md).
 3. [Reduce the output triangle count](simplification.md).
-4. Consult the [API reference](api.md) or [troubleshooting guide](troubleshooting.md).
+4. [Measure reconstruction quality](quality.md).
+5. Consult the [API reference](api.md) or [troubleshooting guide](troubleshooting.md).
 
 Use a voxel size appropriate to your mesh's coordinate units. Sampling can lose
 features smaller than that scale, and passing topology validation does not prove

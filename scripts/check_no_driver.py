@@ -24,3 +24,7 @@ for call in (fusemesh.smoke_test, lambda: fusemesh.reconstruct([(vertices, faces
     else:
         raise AssertionError("nonempty CUDA work unexpectedly succeeded without a driver")
 print("Import, metadata, empty input, and missing-driver diagnostics passed")
+
+report = fusemesh.compare_surfaces((vertices, faces), (vertices, faces), samples=32)
+assert report["symmetric"]["sampled_max"] < 1e-12
+print("CPU surface quality comparison passed without a driver")

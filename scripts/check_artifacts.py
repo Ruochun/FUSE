@@ -42,6 +42,11 @@ def check_metadata(data, version):
         "missing simplification dependency",
     )
     require(any(d.startswith("rtree") for d in dependencies), "missing Rtree dependency")
+    require("quality" in metadata.get_all("Provides-Extra", []), "missing quality extra")
+    require(
+        any(d.startswith("manifold3d") and 'extra == "quality"' in d for d in dependencies),
+        "missing quality union dependency",
+    )
 
 
 def check_wheel(path, version, portable=True):
@@ -120,6 +125,9 @@ def check_source(path, version):
             "tests/test_m3.py",
             "tests/test_simplification.py",
             "python/fusemesh/simplification.py",
+            "python/fusemesh/quality.py",
+            "tests/test_quality.py",
+            "docs/quality.md",
             "scripts/check_artifacts.py",
             "scripts/check_no_driver.py",
             "scripts/ci_native_build.sh",

@@ -23,12 +23,12 @@ NVIDIA driver is installed and that the process can see a compatible GPU.
 which physical GPU it names. Source-build toolkit availability is separate from
 runtime driver availability. See [installation requirements](installation.md).
 
-Loading, saving, and `simplify()` can run without a GPU. `reconstruct()` on a
+Loading, saving, `simplify()`, and `compare_surfaces()` can run without a GPU. `reconstruct()` on a
 nonempty scene has no CPU fallback.
 
-## The mesh fails validation
+## Reconstruction or simplification rejects a mesh
 
-Inputs must have finite coordinates, valid triangle indices, nondegenerate faces,
+Reconstruction and simplification inputs must have finite coordinates, valid triangle indices, nondegenerate faces,
 closed edges, consistent winding, and manifold vertex neighborhoods. Common
 causes include holes, disconnected copies of shared vertices in STL triangle
 soups, or material groups loaded as separate open geometries.
@@ -75,3 +75,21 @@ reason instead of returning a rejected candidate.
 Small error tolerances, sharp creases, and thin anisotropic solids can limit
 reduction. Surface checks do not establish freedom from self-intersections or
 preserve separation between nearby shells. See [simplification](simplification.md).
+
+## Quality comparison rejects a mesh
+
+Comparing one original surface with one output surface does not require closed
+or manifold topology. Use `quality_demo.py --inputs original.off reconstructed.obj`
+for this CPU-only mode; no reconstruction occurs.
+
+Zero-area faces are rejected by default. Use `--degenerate-faces drop` in the demo
+or quality CLI, or `degenerate_faces="drop"` in Python, to exclude them from both
+surfaces. Inspect `report["cleaning"]` for per-mesh removal counts. Input files
+are unchanged. Invalid coordinates/indices and meshes with no remaining valid
+triangles still raise errors. Thin triangles with positive computed area are
+not deliberately removed by a tolerance threshold.
+
+For multiple original solids, install the `quality` extra. Boolean reference
+construction still requires valid closed, oriented solids after cleaning.
+Dropping zero-area faces does not repair an open or nonmanifold solid. See
+[quality inputs and limitations](quality.md).

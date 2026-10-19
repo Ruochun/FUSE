@@ -8,7 +8,7 @@ replace an already installed build of the same version; see
 ## Correctness tests
 
 ```bash
-python -m pip install pytest
+python -m pip install pytest "manifold3d==3.5.4"
 python -m pytest tests -q
 ```
 
@@ -103,3 +103,14 @@ These are single measurements on generated fixtures, not guarantees for other
 meshes or hardware. Thin geometry can retain many faces even when surfaces are
 planar. Conservative error bounds can lie near the requested tolerance while
 actual deviation is much smaller. See [the quality contract](simplification.md).
+
+Surface quality tests exercise analytic offsets, area weighting, missing and
+extra components, Boolean reference unions (including cavities), and an
+independent brute-force nearest-triangle oracle. File-demo tests verify that
+nonmanifold inputs bypass reconstruction; cleaning tests check degenerate-face
+counts, input preservation, invalid-data rejection, and coordinate scaling. The GPU test also scores a
+reconstructed and simplified union. Run them with:
+
+```bash
+python -m pytest tests/test_quality.py tests/test_quality_demo.py -q
+```
