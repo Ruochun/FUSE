@@ -76,11 +76,35 @@ python examples/fuse_files.py a.off b.off \
   --voxel-size 0.05 --backend sparse --memory-mib 512 --output build/union.obj
 ```
 
-One input file also works. Add `--validation basic` to skip reconstruction's
-topology checks; `--validation full` is the default. Basic mode retains numeric
-and index checks and does not repair the mesh or guarantee correct inside/outside
-classification for open or nonmanifold inputs. The selected mode is recorded in
-the JSON output.
+One input file also works.
+
+### Validation when fusing
+
+The file demo defaults to `--validation full`; the Python API defaults to
+`validation="full"`. Full mode checks numeric/index validity, degenerate triangles,
+and closed, consistently oriented edge- and vertex-manifold topology.
+
+To skip reconstruction's topology checks explicitly:
+
+```bash
+python examples/fuse_files.py model.off --voxel-size 0.05 \
+  --validation basic --memory-mib 512 --output build/union.obj
+```
+
+The equivalent API option is:
+
+```python
+result = fusemesh.reconstruct("model.off", voxel_size=0.05, validation="basic")
+```
+
+Prefer full validation for normal use. Basic mode retains numeric and index
+checks, including rejection of zero-area triangles, but does not repair the mesh
+or guarantee correct inside/outside
+classification for open or nonmanifold inputs. A successful basic-mode run does
+not establish that the input is a valid solid. Neither mode detects geometric
+self-intersections. The selected mode is recorded in the result metadata and the
+file demo's JSON output. This option controls fusion only; subsequent
+simplification still performs its own topology checks.
 
 The file demo defaults to a 16 GiB device-buffer limit; the library
 default remains 512 MiB. Set `--memory-mib` explicitly for reproducible runs.

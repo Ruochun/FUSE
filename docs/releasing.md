@@ -23,11 +23,11 @@ This is the maintainer guide. Users should start with
   wheel tests include it to exercise this path.
   Build tools pin nanobind 2.15.0 and scikit-build-core 0.11.6 to keep Python 3.9 support reproducible.
 
-After publication, install with `python -m pip install --only-binary=:all: fusemesh`.
+Published releases are available on PyPI. Install with `python -m pip install --only-binary=:all: fusemesh`.
 GPU reconstruction requires an NVIDIA driver; the CUDA toolkit and a compiler
 are not needed for wheel use. Ordinary `pip install fusemesh` also works on supported wheel platforms; unsupported
-platforms may attempt a source build. Before publication, install the matching
-wheel downloaded from GitHub Actions. An artifact version alone does not imply a
+platforms may attempt a source build. To test an unpublished build, install the
+matching wheel downloaded from GitHub Actions. An artifact version alone does not imply a
 published or fully qualified release.
 
 ## Formatting

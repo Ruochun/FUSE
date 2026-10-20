@@ -6,7 +6,7 @@ file loading, export, surface simplification, and quality comparisons run on the
 
 ## Using FUSE
 
-1. [Install a wheel or build from source](installation.md).
+1. [Install from PyPI, a downloaded wheel, or source](installation.md).
 2. [Load files and reconstruct a union](mesh-loading.md).
 3. [Reduce the output triangle count](simplification.md).
 4. [Measure reconstruction quality](quality.md).

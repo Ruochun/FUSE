@@ -13,24 +13,25 @@ are not necessarily preserved.
 
 ## Install
 
-Use a Linux x86-64 wheel matching your CPython version (3.9–3.14). Download and
-extract the corresponding `wheel-cp…` artifact from a successful
-[GitHub Actions build](https://github.com/Ruochun/FUSE/actions/workflows/wheels.yml),
-then install the **single matching wheel**:
+FUSE is published on PyPI as `fusemesh`. On supported Linux x86-64 systems
+with CPython 3.9–3.14, install it with:
 
 ```bash
-python -m pip install /path/to/fusemesh-<version>-<python>-<abi>-<platform>.whl
-python -c 'import fusemesh; print(fusemesh.build_info()); print(fusemesh.smoke_test())'
+python -m pip install fusemesh
+python -c 'import fusemesh; print(fusemesh.build_info())'
 ```
 
-Replace the placeholder path with the downloaded filename. Reconstruction and
-`smoke_test()` require an NVIDIA GPU and driver. Wheel installations include the
-CUDA runtime and Python dependencies; a CUDA toolkit or compiler is not required.
+Reconstruction requires an NVIDIA GPU and driver. Compatible wheel installations
+include the CUDA runtime and Python dependencies; no CUDA toolkit, compiler, or
+`[cuda]` extra is required. To check GPU execution, run
+`python -c 'import fusemesh; print(fusemesh.smoke_test())'`.
 Loading, saving, simplification, and quality comparisons run on the CPU without
 initializing CUDA.
 
 See [installation and compatibility](docs/installation.md) for GPU requirements,
-source builds, and reinstalling a changed wheel with the same version number.
+downloaded wheels, source builds, and reinstalling a changed wheel with the same
+version number. Example scripts are in the repository, not in the pip package;
+clone or download the repository to run them.
 
 ## Fuse mesh files
 
@@ -53,6 +54,25 @@ From a repository checkout, run the file example:
 python examples/fuse_files.py a.off b.obj \
   --voxel-size 0.05 --memory-mib 512 --output union.obj
 ```
+
+Fusion defaults to `validation="full"`, which checks numeric/index validity and
+closed, consistently oriented manifold topology. To explicitly skip topology
+checks, use `validation="basic"` in Python:
+
+```python
+result = fusemesh.reconstruct("model.off", voxel_size=0.05, validation="basic")
+```
+
+Or pass `--validation basic` to the file example:
+
+```bash
+python examples/fuse_files.py model.off --voxel-size 0.05 \
+  --validation basic --memory-mib 512 --output union.obj
+```
+
+Use full validation by default. Basic mode keeps numeric/index and zero-area
+triangle checks but does not repair defects or make open/nonmanifold inputs reliable solids. Neither mode
+detects self-intersections. See [mesh validation](docs/mesh-loading.md#validation-when-fusing).
 
 To try generated geometry without supplying a file:
 

@@ -22,7 +22,27 @@ automatically, including NumPy, Trimesh, fast-simplification, and Rtree.
 For [quality comparisons](quality.md) involving multiple original solids, install
 the optional `quality` extra (`pip install "fusemesh[quality]"`).
 
-## Install a prebuilt wheel
+## Install from PyPI
+
+`fusemesh` is available on PyPI. On a supported platform, pip selects the wheel
+matching your Python version and installs the runtime dependencies:
+
+```bash
+python -m pip install fusemesh
+```
+
+For reference unions of multiple original solids in quality comparisons:
+
+```bash
+python -m pip install "fusemesh[quality]"
+```
+
+No `[cuda]` extra is needed. To require a prebuilt wheel instead of allowing a
+source-build fallback, use `python -m pip install --only-binary=:all: fusemesh`.
+Example scripts under `examples/` and trial scripts under `benchmarks/` are not
+included in the pip package; clone or download the repository to run them.
+
+## Install a downloaded wheel
 
 Open the repository's [wheel workflow](https://github.com/Ruochun/FUSE/actions/workflows/wheels.yml)
 and select a successful build of the revision you need. Download the artifact
