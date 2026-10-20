@@ -7,9 +7,12 @@
 #include <memory>
 #include <vector>
 
+#include "simplification.h"
+
 namespace nb = nanobind;
 
 NB_MODULE(_native, m) {
+    fuse_simplification::bind(m);
     m.doc() = "FUSE sparse CUDA reconstruction backend";
     nb::exception<fuse::ResourceError>(m, "ResourceError", PyExc_MemoryError);
     m.def(

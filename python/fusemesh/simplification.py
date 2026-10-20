@@ -38,60 +38,15 @@ def _integer(value, name, minimum):
     return value
 
 
-def _inspect(vertices, faces):
-    """Check closed oriented vertex/edge manifolds and find connected shells."""
-    if len(faces) == 0:
-        return [], np.empty((0, 2), dtype=np.int64), np.empty((0, 2), dtype=np.int64)
-    triangles = vertices[faces]
-    areas = np.linalg.norm(
-        np.cross(triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0]), axis=1
+def _inspect(vertices, faces, *, components_only=False):
+    """Check topology using compact native edge records and vertex-fan cycles."""
+    from ._native import _inspect_mesh
+
+    return _inspect_mesh(
+        np.ascontiguousarray(vertices, dtype=np.float64),
+        np.ascontiguousarray(faces, dtype=np.int64),
+        components_only,
     )
-    if not np.isfinite(areas).all() or np.any(areas <= 1e-28):
-        raise ValueError("mesh has degenerate triangles")
-    if len(np.unique(np.sort(faces, axis=1), axis=0)) != len(faces):
-        raise ValueError("mesh has duplicate triangles")
-    edges = {}
-    links = {}
-    for fi, face in enumerate(faces):
-        a, b, c = map(int, face)
-        for u, v, opposite in ((a, b, c), (b, c, a), (c, a, b)):
-            edges.setdefault((min(u, v), max(u, v)), []).append((fi, u < v))
-            links.setdefault(u, {}).setdefault(v, []).append(opposite)
-            links[u].setdefault(opposite, []).append(v)
-    if any(len(pair) != 2 for pair in edges.values()):
-        raise ValueError("mesh must be closed and edge-manifold")
-    if any(pair[0][1] == pair[1][1] for pair in edges.values()):
-        raise ValueError("mesh winding must be consistent")
-    for link in links.values():
-        seen, stack = set(), [next(iter(link))]
-        while stack:
-            u = stack.pop()
-            if u not in seen:
-                seen.add(u)
-                stack.extend(v for v in link[u] if v not in seen)
-        if len(seen) != len(link) or any(len(v) != 2 for v in link.values()):
-            raise ValueError("mesh must be vertex-manifold")
-    adjacent = np.array([[p[0][0], p[1][0]] for p in edges.values()], dtype=np.int64)
-    neighbors = [[] for _ in faces]
-    for a, b in adjacent:
-        neighbors[a].append(b)
-        neighbors[b].append(a)
-    seen = np.zeros(len(faces), dtype=bool)
-    components = []
-    for start in range(len(faces)):
-        if seen[start]:
-            continue
-        stack, component = [start], []
-        seen[start] = True
-        while stack:
-            face = stack.pop()
-            component.append(face)
-            for other in neighbors[face]:
-                if not seen[other]:
-                    seen[other] = True
-                    stack.append(other)
-        components.append(np.asarray(sorted(component), dtype=np.int64))
-    return components, np.asarray(list(edges), dtype=np.int64), adjacent
 
 
 def _volume(triangles):
@@ -100,12 +55,28 @@ def _volume(triangles):
     return float(np.einsum("ij,ij->i", t[:, 0], np.cross(t[:, 1], t[:, 2])).sum() / 6)
 
 
+def _mesh_volume(vertices, faces):
+    origin = vertices[faces[0, 0]]
+    total = 0.0
+    for start in range(0, len(faces), 65536):
+        t = vertices[faces[start : start + 65536]] - origin
+        total += np.einsum("ij,ij->i", t[:, 0], np.cross(t[:, 1], t[:, 2])).sum()
+    return float(total / 6)
+
+
 def _sharp_edges(vertices, faces, edges, adjacent, angle):
-    triangles = vertices[faces]
-    normals = np.cross(triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0])
-    normals /= np.linalg.norm(normals, axis=1)[:, None]
-    dots = np.einsum("ij,ij->i", normals[adjacent[:, 0]], normals[adjacent[:, 1]])
-    return vertices[edges[dots <= math.cos(math.radians(angle)) + 1e-10]]
+    normals = np.empty((len(faces), 3), dtype=np.float64)
+    for start in range(0, len(faces), 65536):
+        triangles = vertices[faces[start : start + 65536]]
+        batch = np.cross(triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0])
+        batch /= np.linalg.norm(batch, axis=1)[:, None]
+        normals[start : start + len(batch)] = batch
+    selected = np.empty(len(edges), dtype=bool)
+    for start in range(0, len(edges), 65536):
+        pair = adjacent[start : start + 65536]
+        dots = np.einsum("ij,ij->i", normals[pair[:, 0]], normals[pair[:, 1]])
+        selected[start : start + len(pair)] = dots <= math.cos(math.radians(angle)) + 1e-10
+    return vertices[edges[selected]]
 
 
 def _closest(primitives, points):
@@ -124,11 +95,15 @@ class _Surface:
         from rtree import index
 
         self.primitives = primitives
-        bounds = np.concatenate((primitives.min(axis=1), primitives.max(axis=1)), axis=1)
-        self.tree = index.Index(
-            ((i, tuple(b), None) for i, b in enumerate(bounds)),
-            properties=index.Property(dimension=3),
-        )
+
+        def entries():
+            for start in range(0, len(primitives), 65536):
+                batch = primitives[start : start + 65536]
+                bounds = np.concatenate((batch.min(axis=1), batch.max(axis=1)), axis=1)
+                for i, bound in enumerate(bounds):
+                    yield start + i, tuple(bound), None
+
+        self.tree = index.Index(entries(), properties=index.Property(dimension=3))
 
     def close(self):
         self.tree.close()
@@ -213,14 +188,20 @@ def _symmetric_bound(a, b, tolerance, budget):
         return 0.0, 0.0
     if not len(a) or not len(b):
         raise SimplificationError("sharp features were removed or introduced")
-    target_a, target_b = _Surface(a), _Surface(b)
+    if len(a) + len(b) > budget[0]:
+        raise SimplificationError("distance verification budget exhausted")
+    target_b = _Surface(b)
     try:
         ab = _directed_bound(a, target_b, tolerance, budget)
+    finally:
+        target_b.close()
+    del target_b
+    target_a = _Surface(a)
+    try:
         ba = _directed_bound(b, target_a, tolerance, budget)
-        return max(ab[0], ba[0]), max(ab[1], ba[1])
     finally:
         target_a.close()
-        target_b.close()
+    return max(ab[0], ba[0]), max(ab[1], ba[1])
 
 
 def _decimate(vertices, faces, count):
@@ -300,8 +281,8 @@ def simplify(
         raise ValueError("face index is outside the vertex array")
     if len(vertices) > np.iinfo(np.int32).max or len(faces) > np.iinfo(np.int32).max:
         raise ValueError("simplification backend requires 32-bit mesh sizes")
-    vertices = np.array(vertices, dtype=np.float64, copy=True)
-    faces = np.array(faces, dtype=np.int64, copy=True)
+    vertices = np.ascontiguousarray(vertices, dtype=np.float64)
+    faces = np.ascontiguousarray(faces, dtype=np.int64)
     target_faces = target_faces if target_faces is not None else max(4, len(faces) // 2)
     scale, origin = 1.0, np.zeros(3)
     if faces.size:
@@ -311,6 +292,7 @@ def simplify(
         if not math.isfinite(scale) or scale <= 0:
             raise ValueError("mesh extent must be finite and positive")
         origin = lo + (hi - lo) / 2
+        del used
     # Reserve room for normalization/output rounding at large translations.
     rounding = (
         16
@@ -324,17 +306,18 @@ def simplify(
             "max_error is below the supported precision for this mesh extent/translation"
         )
     normalized = (vertices - origin) / scale
-    components, _, _ = _inspect(normalized, faces)
+    components = _inspect(normalized, faces, components_only=True)[0]
     out_v, out_f, reports, offset = [], [], [], 0
     for component in components:
         used, inverse = np.unique(faces[component], return_inverse=True)
         v, f = normalized[used], inverse.reshape(-1, 3)
         _, edges, adjacent = _inspect(v, f)
-        original_volume = _volume(v[f])
+        original_volume = _mesh_volume(v, f)
         if original_volume == 0 or not math.isfinite(original_volume):
             raise ValueError("each shell must enclose nonzero finite signed volume")
         euler = len(v) - len(edges) + len(f)
         sharp = _sharp_edges(v, f, edges, adjacent, feature_angle)
+        del edges, adjacent
         count = max(4, int(target_faces * len(f) / max(1, len(faces))))
         report = dict(
             input_faces=len(f),
@@ -355,6 +338,10 @@ def simplify(
             attempt = dict(target_faces=count)
             report["attempts"].append(attempt)
             try:
+                # Every valid closed candidate has at least four faces, and
+                # both surface directions must inspect every source triangle.
+                if max_checks < len(f) + 4:
+                    raise SimplificationError("distance verification budget exhausted")
                 cv, cf = _decimate(v, f, count)
                 if not np.isfinite(cv).all() or cf.size == 0 or cf.min() < 0 or cf.max() >= len(cv):
                     raise SimplificationError("backend produced invalid geometry")
@@ -363,7 +350,7 @@ def simplify(
                     raise SimplificationError("backend did not reduce the face count")
                 if len(parts) != 1 or len(np.unique(cf)) - len(ce) + len(cf) != euler:
                     raise SimplificationError("shell topology changed")
-                volume = _volume(cv[cf])
+                volume = _mesh_volume(cv, cf)
                 change = abs(volume - original_volume) / abs(original_volume)
                 if volume * original_volume <= 0 or change > max_volume_change:
                     raise SimplificationError("shell orientation or volume check failed")

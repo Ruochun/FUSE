@@ -153,3 +153,31 @@ CPU-only acceptance. The benchmark without `--gpu` exercises only CPU fixtures.
 It runs each case in a fresh process and reports time, process peak RSS, peak-RSS
 growth, bounds, volume change and reduction ratio. Peak-RSS growth is a
 high-water-mark difference, not a measurement of all allocations.
+
+## Large meshes and host memory
+
+Topology validation uses compact native edge arrays and checks vertex fans without
+constructing Python adjacency dictionaries. The initial inspection returns only
+connected-shell face indices; reduction proceeds one shell at a time. Volume and
+normal calculations use batches, and distance verification builds one direction's
+spatial index at a time. These operations run on the CPU and need no GPU memory.
+
+Memory still grows with mesh size. Input/output arrays, the largest shell's
+quadric-decimation state, and triangle geometry for distance verification must fit
+in host RAM. This is not an out-of-core simplifier, and there is no host-memory cap
+in the API. A mesh with one very large shell can remain expensive.
+
+The default `max_checks=200000` is intended for smaller meshes. Verification needs
+at least one check per triangle in both the original and candidate shell, plus
+sharp-edge checks and any adaptive subdivisions. For million-triangle shells,
+increase this budget accordingly; a larger budget permits more work but does not
+guarantee acceptance or limit peak memory.
+
+To measure topology inspection separately from decimation and distance checks:
+
+```bash
+python benchmarks/benchmark_topology.py model.ply
+```
+
+This reports component sizes, inspection time, and whole-process peak RSS
+(including mesh loading). Run it in a fresh process for comparable measurements.
