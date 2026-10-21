@@ -181,3 +181,143 @@ python benchmarks/benchmark_topology.py model.ply
 
 This reports component sizes, inspection time, and whole-process peak RSS
 (including mesh loading). Run it in a fresh process for comparable measurements.
+
+## Choosing a standalone simplification route
+
+These scripts run from a repository checkout and are separate from the packaged
+FUSE `simplify()` API. Neither is installed by `pip install fusemesh`.
+
+| Route | Main control | Input requirements | Output checks |
+|---|---|---|---|
+| `benchmarks/trial_planar.py` (CGAL) | Angle and plane-distance tolerances | Oriented manifold triangles; open surfaces allowed; no degenerate triangles | Connectivity, degeneracy, component count, aggregate Euler characteristic, closedness |
+| `benchmarks/trial_pymeshlab.py` (PyMeshLab) | Target remaining-face ratio | No manifold precheck; backend may reject or leave problematic regions unchanged | Counts only; independent validation needed |
+
+Use the planar route to remove redundant triangulation from nearly flat regions.
+Use PyMeshLab for general quadric decimation or to attempt processing a mesh that
+fails the planar route's manifold requirement. PyMeshLab is not an automatic
+non-manifold repair utility, and successful execution does not guarantee manifold
+output. Both routes need an independent surface-distance comparison.
+
+Both scripts support PLY, OBJ, OFF, and STL output and replace an existing output
+only after saving succeeds. Keep the input, output, and report paths distinct.
+Their memory limit uses Unix `resource` limits; these trial scripts target Linux.
+
+## PyMeshLab quadric simplification trial
+
+Install the optional dependency in the environment used to run the script:
+
+```bash
+python -m pip install pymeshlab
+python benchmarks/trial_pymeshlab.py input.ply reduced.obj \
+  --ratio 0.5 --report pymeshlab-report.json
+```
+
+`--ratio` is the desired fraction of input triangles remaining (default `0.5`).
+A smaller value requests stronger reduction; constraints can prevent reaching
+the target. `--fixed-placement` disables optimal vertex placement. The script
+enables topology, boundary, and normal preservation, planar quadrics, and
+post-decimation cleanup. These settings do not provide a hard angle tolerance or
+surface-distance bound. No explicit input repair is performed.
+
+`--memory-gib` sets the process virtual-address-space limit (default 20 GiB).
+The JSON report records the backend version, settings, counts, time, and peak
+RSS. Its success status is `simplified_unvalidated`: inspect topology and compare
+the saved output with the input before using it.
+
+```bash
+fusemesh-quality input.ply --reconstructed reduced.obj --tolerance 0.001 \
+  --samples 10000 --seed 0 --output pymeshlab-quality.json
+```
+
+Here `0.001` means 1 mm only for coordinates in metres. The quality comparison
+does not require manifold input and is not a topology check.
+
+Run the optional route tests with:
+
+```bash
+python -m pytest tests/test_pymeshlab_trial.py -q
+```
+
+If PyMeshLab is in a separate environment, set `FUSE_PYMESHLAB_PYTHON` to that
+environment's Python executable. Tests cover format round-trips, existing-output
+replacement, failure preservation, and one non-manifold vertex example; they do
+not establish support for every kind of non-manifold mesh.
+
+## Angle-based planar simplification trial
+
+For dense meshes with nearly planar areas, the standalone
+`benchmarks/trial_planar.py` script detects connected planar patches and
+retriangulates them. It uses CGAL instead of a global target face count.
+
+Build the separate CPU helper with CGAL 6.1 or newer, Eigen3, Boost, CMake, and a
+C++17 compiler available:
+
+```bash
+cmake -S benchmarks/planar_native -B build/planar-native -DCMAKE_BUILD_TYPE=Release
+cmake --build build/planar-native -j2
+```
+
+If CGAL is not installed in a standard location, supply `-DCGAL_DIR=/path/to/CGAL`.
+CGAL's `-DCGAL_DISABLE_GMP=ON` option can use its alternative exact-number backend
+when GMP/MPFR development libraries are unavailable. This helper is separate from
+the FUSE wheel; it is not installed by `pip install fusemesh`. CGAL's own license
+terms apply to its components. No PyMeshLab installation is needed for this mode.
+
+```bash
+python benchmarks/trial_planar.py input.ply reduced.ply \
+  --angle-tolerance 3 --plane-tolerance 0.00025 \
+  --report planar-report.json
+```
+
+The output extension selects the format: `.ply`, `.obj`, `.off`, or `.stl`
+(case-insensitive). Existing output files are overwritten automatically, but only
+after simplification and saving succeed; a failure leaves the previous file
+intact. The input and output must be different paths. For example, use
+`input.ply reduced.obj` to save an OBJ mesh.
+
+STL stores independent triangles rather than shared vertex indices and uses
+single-precision coordinates in binary output. Reloading it may require welding
+coincident vertices to recover connectivity. The helper validates the mesh before
+serialization; use PLY, OBJ, or OFF when shared connectivity and coordinate
+precision matter.
+
+- `--angle-tolerance`: maximum original face-normal deviation from a patch's final fitted
+  plane, in degrees (default 3). It is not just a pairwise angle between neighbors.
+- `--plane-tolerance`: maximum original patch-vertex distance to that plane, in
+  mesh units. The default `0.00025` means 0.25 mm only when coordinates are metres.
+- `--memory-gib`: process virtual-address-space limit (default 20 GiB), not a
+  predicted RAM requirement or a simplification quality control.
+- `--helper`: alternate path to the compiled executable; `FUSE_PLANAR_HELPER`
+  provides the same override.
+
+The region-growing fit is audited against every original member after detection.
+Regions exceeding either tolerance retain their triangles. Shared patch boundary
+chains are also checked against their replacement segments, with additional
+corners retained when necessary. Long boundary chains are split into bounded work
+blocks, which may retain a few extra collinear vertices. This prevents an angle
+threshold from gradually merging a curved surface or hole boundary into a straight one. The output remains
+a triangle mesh, and its triangle count is determined by these constraints.
+CGAL can retain original triangles for patches it cannot retriangulate. A false
+`all_patches_retriangulated` report field indicates this fallback, rather than
+failure of the output validation.
+
+Inputs must have oriented manifold triangular connectivity; open manifold
+surfaces are allowed. Non-manifold junctions and degenerate triangles are rejected
+without repair. The helper checks output connectivity, degeneracy, component
+count, aggregate Euler characteristic, and closedness before replacing an existing
+output file. The input cannot be overwritten. Those checks do not certify
+self-intersection freedom, nesting, or unchanged topology in every respect.
+
+Plane and boundary tolerances are **not a certified bidirectional surface-error
+bound**. Evaluate the result against the unreduced input, for example:
+
+```bash
+fusemesh-quality input.ply --reconstructed reduced.ply --tolerance 0.001 \
+  --samples 10000 --seed 0 --output planar-quality.json
+```
+
+That comparison is sampled. Run the optional helper integration tests after
+building it with `python -m pytest tests/test_planar_trial.py -q`; they cover a
+planar box, plates with square and circular holes, a cylinder, a shallow curved
+surface, angle-controlled crease preservation, long boundary chains, and failure
+paths that preserve existing files.

@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.24)
+project(fuse_planar_trial LANGUAGES CXX)
+find_package(CGAL 6.1 REQUIRED)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+include(CGAL_Eigen3_support)
+add_executable(fuse_planar main.cpp)
+target_compile_features(fuse_planar PRIVATE cxx_std_17)
+target_link_libraries(fuse_planar PRIVATE CGAL::CGAL CGAL::Eigen3_support)
